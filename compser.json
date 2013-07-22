@@ -1,0 +1,24 @@
+{    
+    "name": "heyday/silverstripe-slices",
+    "description": "Provides a Slice extension to DataObject subclasses with custom templates",
+    "type": "silverstripe-module",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Cam Spiers",
+            "email": "cameron@heyday.co.nz",
+            "role": "Developer"
+        }
+    ],
+
+	"require": {
+        "composer/installers": "~1.0",
+		"ajshort/silverstripe-gridfieldextensions":	"dev-temp as dev-master",
+		"simonwelsh/gridfieldrelationhandler":		"dev-master",
+		"heyday/silverstripe-adaptivecontent":		"dev-master",
+		"heyday/silverstripe-dataobjectpreview":	"dev-master",
+		"heyday/silverstripe-colorpalette":			"dev-master",
+		"heyday/silverstripe-versioneddataobjects": "dev-master"
+	}
+
+}
