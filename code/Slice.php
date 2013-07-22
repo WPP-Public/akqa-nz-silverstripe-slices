@@ -9,13 +9,12 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     /**
      * STATIC PROPERTIES START
      */
-    
+
     /**
      * @var array
      */
     private static $dependencies = array(
-        'previewer' => '%$DataObjectPreviewer',
-        'logger'    => '%$Monolog'
+        'previewer' => '%$DataObjectPreviewer'
     );
     /**
      * @var array
@@ -42,13 +41,6 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     /**
      * @var array
      */
-    private static $extensions = array(
-        'AdaptiveContent',
-        'VersionedDataObject',
-        'AdaptiveContentRelated(\'Page\')',
-        'AdaptiveContentIdentifiersAsTemplates',
-        'CacheIncludeExtension'
-    );
     /**
      * @var string
      */
@@ -64,10 +56,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
      * @var DataObjectPreviewer
      */
     public $previewer;
-    /**
-     * @var Psr\Log\LoggerInterface
-     */
-    public $logger;
+
     /**
      * INSTANCE PROPERTIES
      */
@@ -91,7 +80,6 @@ class Slice extends DataObject implements DataObjectPreviewInterface
      */
     public function getCMSFields()
     {
-        Requirements::javascript('mysite/cms-js/autosave.js');
 
         $fields = parent::getCMSFields();
         
@@ -100,77 +88,32 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         /** @var Config_ForClass $config */
         $config = $this->config();
 
-        // TODO: Is there a way to make this more configurable?
-        if ($this->SecondaryIdentifier === 'Clients') {
-            
-            $dataList = WorkSubHubPage::get()
-                    ->filter('Miscellaneous', false);
-            
-            if ($this->SecondaryIdentifier === 'FeaturedClients') {
-                $dataList = $dataList->filter('Featured', true);
-            }
 
+        // Make tertiary identifiers map to class names
+        // Get uninherited ids so different id's can be made available per class
+        $tIdentifiers = $this->getConfigMerged(
+            $config,
+            'tertiaryIdentifiers',
+            Config::UNINHERITED
+        );
+
+        if (is_array($tIdentifiers) && $tIdentifiers) {
             $fields->replaceField(
                 'TertiaryIdentifier',
                 $tIdentifier = new ListboxField(
                     'TertiaryIdentifier',
-                    'Exclude the following clients',
-                    $dataList
-                        ->map('ID', 'Title')
-                        ->toArray(),
+                    'Visual Options',
+                    $tIdentifiers,
                     '',
                     null,
                     true
                 )
             );
-
-            $tIdentifier->setHasEmptyDefault(true);
-
-        } elseif ($this->SecondaryIdentifier === 'CaseStudies') {
-
-            $fields->replaceField(
-                'TertiaryIdentifier',
-                $tIdentifier = new ListboxField(
-                    'TertiaryIdentifier',
-                    'Limit to the following case studies',
-                    CaseStudyPage::get()
-                        ->map('ID', 'Title')
-                        ->toArray(),
-                    '',
-                    null,
-                    true
-                )
-            );
-
-            $tIdentifier->setHasEmptyDefault(true);
-
         } else {
-
-            // Make tertiary identifiers map to class names
-            // Get uninherited ids so different id's can be made available per class
-            $tIdentifiers = $this->getConfigMerged(
-                $config,
-                'tertiaryIdentifiers',
-                Config::UNINHERITED
-            );
-
-            if (is_array($tIdentifiers) && $tIdentifiers) {
-                $fields->replaceField(
-                    'TertiaryIdentifier',
-                    $tIdentifier = new ListboxField(
-                        'TertiaryIdentifier',
-                        'Visual Options',
-                        $tIdentifiers,
-                        '',
-                        null,
-                        true
-                    )
-                );
-            } else {
-                $fields->removeByName('TertiaryIdentifier');
-            }
-
+            $fields->removeByName('TertiaryIdentifier');
         }
+
+
         
         // Set up slice specific fields
 
@@ -456,7 +399,6 @@ class Slice extends DataObject implements DataObjectPreviewInterface
                 $data
             ) : false;
         } catch (Exception $e) {
-            $this->logger->error('Template not found for slice', array('exception' => $e));
             return false;
         }
     }
