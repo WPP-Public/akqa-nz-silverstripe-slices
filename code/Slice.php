@@ -29,18 +29,11 @@ class Slice extends DataObject implements DataObjectPreviewInterface
      */
     private static $has_one = array(
         'Parent'         => 'Page',
-        'SecondaryImage' => 'Image',
-        'Video'          => 'Video'
+        'SecondaryImage' => 'Image'        
     );
-    /**
-     * @var array
-     */
-    private static $has_many = array(
-        'SubSlices'      => 'SubSlice.ParentSlice'
-    );
-    /**
-     * @var array
-     */
+
+
+
     /**
      * @var string
      */
@@ -153,37 +146,9 @@ class Slice extends DataObject implements DataObjectPreviewInterface
             isset($fieldsInTab[0]) ? $fieldsInTab[0]->getName() : null //Display the field at the top
         );
 
-        $fields->removeByName('SubSlices');
         
-        // Set up sub slices grid field
-        $fields->addFieldsToTab(
-            'Root.Main',
-            new GridField(
-                'SubSlices',
-                null,
-                $this->SubSlices(),
-                $gridConfig = GridFieldConfig_RelationEditor::create()
-            )
-        );
-        $gridConfig->addComponent(new GridFieldDataObjectPreview($this->previewer));
-        $gridConfig->addComponent(new GridFieldOrderableRows('Sort', true));
-        $gridConfig->removeComponentsByType('GridFieldDeleteAction');
-        $gridConfig->removeComponentsByType('GridFieldDetailForm');
-        $gridConfig->addComponent(new VersionedDataObjectDetailsForm());
+        
 
-        // Set up has one grid field for video
-        $videoGridConfig = GridFieldConfig_RecordEditor::create();
-        $videoGridConfig->addComponent(new GridFieldHasOneRelationHandler($this, 'Video'));
-        
-        $fields->addFieldToTab(
-            'Root.Video',
-            new GridField(
-                'Video',
-                'Video',
-                Video::get(),
-                $videoGridConfig
-            )
-        );
         
         $this->updateCMSFieldsByConfiguration($config, $fields);
 
@@ -203,12 +168,6 @@ class Slice extends DataObject implements DataObjectPreviewInterface
             }
         }
 
-        // Set up autosave fields
-        foreach ($this->getConfigMerged($config, 'autoSave') as $fieldName) {
-            if ($field = $fields->dataFieldByName($fieldName)) {
-                $field->addExtraClass('autosave');
-            }
-        }
 
         // Hidden fields for this Slice type
         $shownFields = array_diff(
@@ -324,6 +283,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
      */
     public function getPreviewHtml()
     {
+        $hasOneData = array ();
         // Populate record with default values if needed
         if (!$this->ID || !$this->Identifier) {
 
@@ -334,36 +294,32 @@ class Slice extends DataObject implements DataObjectPreviewInterface
                 $this->record
             );
 
-            $injectorCreator = new InjectionCreator();
 
+            $injectorCreator = new InjectionCreator();
+            $hasOneData = array ();
             foreach ($this->has_one() as $relation => $type) {
                 if (!$this->{$relation.'ID'} && isset($exampleFields[$relation])) {
                     switch ($type) {
-                        case 'Image':
-                            $prop = new ReflectionProperty('ViewableData', 'objCache');
-                            $prop->setAccessible(true);
-                            $cache = $prop->getValue($this);
-                            $cache[$relation] = $injectorCreator->create('Image_Cached', $exampleFields[$relation]);
-                            $prop->setValue($this, $cache);
-                            break;
+                        case 'Image' || is_subclass_of($type, "Image"):
+                            $hasOneData[$relation] = $injectorCreator->create('Image_Cached', $exampleFields[$relation]);                            
+                        break;
                     }
                 }
             }         
         }
 
+
         Config::inst()->update('SSViewer', 'theme_enabled', 'heyday');
 
         Requirements::clear();
 
-        $viewer = new SSViewer('PlainWrapper');
+        foreach($this->config()->previewStylesheets as $css) {
+            Requirements::css($css);
+        }
 
-        $result = $viewer->process(
-            new ArrayData(
-                array(
-                    'Slice' => $this->forTemplate()
-                )
-            )
-        );
+        $result = $this->customise(array(
+            'Slice' => $this->customise($hasOneData)->forTemplate()
+        ))->renderWith('SliceWrapper');
 
         Requirements::restore();
 
@@ -377,6 +333,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     {
         return $this->previewer->preview($this);
     }
+
     /**
      * Use in the actual rendering of the slice. Uses `getSSViewer` (with the Secondary Identifier) for rendering
      * @return HTMLText
