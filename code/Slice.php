@@ -55,20 +55,6 @@ class Slice extends DataObject implements DataObjectPreviewInterface
      */
 
     /**
-     * DATAOBJECT METHODS START
-     */
-    /**
-     * Delete the sub slices too :)
-     */
-    public function onBeforeDelete()
-    {
-        parent::onBeforeDelete();
-        
-        foreach ($this->SubSlices() as $slice) {
-            $slice->delete();
-        }
-    }
-    /**
      * @return FieldList
      */
     public function getCMSFields()
