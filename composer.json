@@ -18,7 +18,7 @@
 		"heyday/silverstripe-adaptivecontent":		"dev-master",
 		"heyday/silverstripe-dataobjectpreview":	"dev-master",
 		"heyday/silverstripe-colorpalette":			"dev-master",
-		"heyday/silverstripe-versioneddataobjects": "~1.0.0"
+		"heyday/silverstripe-versioneddataobjects": "~1.0"
 	}
 
 }
