@@ -175,7 +175,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         // Change any field titles that need it
         $fieldLabels = $this->getConfigMerged($config, 'fieldLabels');
         foreach ($fieldLabels as $fieldName => $label) {
-            $fields->dataFieldByName($fieldName)->setTitle($label);
+            $fields->renameField($fieldName, $label);
         }
     }
     /**
