@@ -13,8 +13,8 @@
 
 	"require": {
         "composer/installers": "~1.0",
-		"ajshort/silverstripe-gridfieldextensions":	"dev-master",
-		"simonwelsh/gridfieldrelationhandler":		"dev-master",
+		"ajshort/silverstripe-gridfieldextensions":	"~1.0.0",
+		"simonwelsh/gridfieldrelationhandler":		"~1.0.4",
 		"heyday/silverstripe-adaptivecontent":		"dev-master",
 		"heyday/silverstripe-dataobjectpreview":	"dev-master",
 		"heyday/silverstripe-colorpalette":			"dev-master",
