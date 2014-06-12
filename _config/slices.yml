@@ -21,6 +21,8 @@ Slice:
   hiddenFields:
     Default: []
 
+  fieldHelp:
+    Default: []
 
   exampleFields:
     Default:

@@ -93,7 +93,6 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         }
 
 
-        
         // Set up slice specific fields
 
         // Color options for palette fields
@@ -132,10 +131,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
             isset($fieldsInTab[0]) ? $fieldsInTab[0]->getName() : null //Display the field at the top
         );
 
-        
-        
 
-        
         $this->updateCMSFieldsByConfiguration($config, $fields);
 
         return $fields;
@@ -176,6 +172,16 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         $fieldLabels = $this->getConfigMerged($config, 'fieldLabels');
         foreach ($fieldLabels as $fieldName => $label) {
             $fields->renameField($fieldName, $label);
+        }
+
+        // Set field right text
+        $fieldHelp = $this->getConfigMerged($config, 'fieldHelp');
+        foreach ($fieldHelp as $fieldName => $helpText) {
+            $field = $fields->datafieldByName($fieldName);
+
+            if ($field) {
+                $field->setRightTitle($helpText);
+            }
         }
     }
     /**
