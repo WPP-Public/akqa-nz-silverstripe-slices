@@ -351,6 +351,11 @@ class Slice extends DataObject implements DataObjectPreviewInterface
             return false;
         }
     }
+
+    public function getTemplateClass()
+    {
+        return $this->ClassName;
+    }
     /**
      * VISUAL HELPER METHODS END
      */
