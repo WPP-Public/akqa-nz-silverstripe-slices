@@ -29,7 +29,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
      */
     private static $has_one = array(
         'Parent'         => 'Page',
-        'SecondaryImage' => 'Image'        
+        'SecondaryImage' => 'Image'
     );
 
 
@@ -297,16 +297,19 @@ class Slice extends DataObject implements DataObjectPreviewInterface
                         break;
                     }
                 }
-            }         
+            }
         }
-
 
         Config::inst()->update('SSViewer', 'theme_enabled', 'heyday');
 
         Requirements::clear();
-
-        foreach($this->config()->previewStylesheets as $css) {
-            Requirements::css($css);
+        
+        $previewStylesheets = $this->config()->previewStylesheets;
+        
+        if (is_array($previewStylesheets)) {
+            foreach($previewStylesheets as $css) {
+                Requirements::css($css);
+            }
         }
 
         $result = $this->customise(array(
