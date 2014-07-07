@@ -1,24 +1,22 @@
-{    
-    "name": "heyday/silverstripe-slices",
-    "description": "Provides a Slice extension to DataObject subclasses with custom templates",
-    "type": "silverstripe-module",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Cam Spiers",
-            "email": "cameron@heyday.co.nz",
-            "role": "Developer"
-        }
-    ],
-
+{
+	"name": "heyday/silverstripe-slices",
+	"description": "Provides a Slice extension to DataObject subclasses with custom templates",
+	"type": "silverstripe-module",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Cam Spiers",
+			"email": "cameron@heyday.co.nz",
+			"role": "Developer"
+		}
+	],
 	"require": {
-        "composer/installers": "~1.0",
-		"ajshort/silverstripe-gridfieldextensions":	"~1.0.0",
-		"simonwelsh/gridfieldrelationhandler":		"~1.0.4",
-		"heyday/silverstripe-adaptivecontent":		"dev-master",
-		"heyday/silverstripe-dataobjectpreview":	"dev-master",
-		"heyday/silverstripe-colorpalette":			"dev-master",
+		"composer/installers": "~1.0",
+		"ajshort/silverstripe-gridfieldextensions": "~1.0.0",
+		"simonwelsh/gridfieldrelationhandler": "~1.0.4",
+		"heyday/silverstripe-adaptivecontent": "~3.0.0",
+		"heyday/silverstripe-dataobjectpreview": "~1.0.2",
+		"heyday/silverstripe-colorpalette": "~1.0.0",
 		"heyday/silverstripe-versioneddataobjects": "~1.0"
 	}
-
 }
