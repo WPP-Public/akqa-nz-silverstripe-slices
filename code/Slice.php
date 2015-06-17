@@ -1,65 +1,34 @@
 <?php
 
-/**
- * Class Slice
- * 
- */
 class Slice extends DataObject implements DataObjectPreviewInterface
 {
-    /**
-     * STATIC PROPERTIES START
-     */
-
-    /**
-     * @var array
-     */
     private static $dependencies = array(
         'previewer' => '%$DataObjectPreviewer'
     );
-    /**
-     * @var array
-     */
+
     private static $db = array(
         'Sort'            => 'Int',
         'BackgroundColor' => 'Varchar(255)',
         'BlockColor'      => 'Varchar(255)'
     );
-    /**
-     * @var array
-     */
+
     private static $has_one = array(
         'Parent'         => 'Page',
         'SecondaryImage' => 'Image'
     );
 
-
-
-    /**
-     * @var string
-     */
     private static $default_sort = 'Sort ASC';
-    /**
-     * STATIC PROPERTIES END
-     */
-    
-    /**
-     * INSTANCE PROPERTIES START
-     */
+
     /**
      * @var DataObjectPreviewer
      */
     public $previewer;
 
     /**
-     * INSTANCE PROPERTIES
-     */
-
-    /**
      * @return FieldList
      */
     public function getCMSFields()
     {
-
         $fields = parent::getCMSFields();
         
         $fields->replaceField('Title', new TextareaField('Title'));
@@ -136,6 +105,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
 
         return $fields;
     }
+
     /**
      * @param $config
      * @param $fields
@@ -184,13 +154,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
             }
         }
     }
-    /**
-     * DATAOBJECT METHODS END
-     */
 
-    /**
-     * HELPER METHODS START
-     */
     /**
      * Gets an array for a specified config key, using the secondary identifier + default options combined
      * @param Config_ForClass $config
@@ -207,6 +171,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
             isset($fields[$this->SecondaryIdentifier]) && is_array($fields[$this->SecondaryIdentifier]) ? $fields[$this->SecondaryIdentifier] : array()
         );
     }
+
     /**
      * Checks if there is a tertiary identifier matching the requested one
      * 
@@ -224,6 +189,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
             )
         );
     }
+
     /**
      * Can be used for classnames
      * 
@@ -238,6 +204,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
             isset($this->record['TertiaryIdentifier']) ? $this->record['TertiaryIdentifier'] : ''
         );
     }
+
     /**
      * Get a nice comma separated version of the tertiary identifiers like "No Margin Bottom, Underline"
      * @return string
@@ -259,13 +226,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         }
         return implode(', ', $tIdentifiersNice);
     }
-    /**
-     * HELPER METHODS END
-     */
 
-    /**
-     * VISUAL HELPER METHODS START
-     */
     /**
      * This returns a Template for use by the preview grid field and field
      * 
@@ -320,6 +281,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
 
         return $result;
     }
+
     /**
      * Used in templates to get a iframe preview of the slice
      * @return string
@@ -359,7 +321,4 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     {
         return $this->ClassName;
     }
-    /**
-     * VISUAL HELPER METHODS END
-     */
 }
