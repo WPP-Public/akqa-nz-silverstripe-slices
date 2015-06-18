@@ -7,14 +7,13 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     );
 
     private static $db = array(
-        'Sort'            => 'Int',
-        'BackgroundColor' => 'Varchar(255)',
-        'BlockColor'      => 'Varchar(255)'
+        'Template' => 'Varchar(255)',
+        'VisualOptions' => 'Varchar(255)',
+        'Sort' => 'Int',
     );
 
     private static $has_one = array(
-        'Parent'         => 'Page',
-        'SecondaryImage' => 'Image'
+        'Parent' => 'Page'
     );
 
     private static $default_sort = 'Sort ASC';
@@ -30,243 +29,171 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
-        
-        $fields->replaceField('Title', new TextareaField('Title'));
+        $fields->removeByName('Template');
+        $fields->removeByName('VisualOptions');
 
-        /** @var Config_ForClass $config */
-        $config = $this->config();
+        $config = $this->getCurrentTemplateConfig();
 
+        $this->removeUnconfiguredFields($fields, $config);
+        $this->configureFieldTypes($fields, $config);
+        $this->configureFieldLabels($fields, $config);
+        $this->configureFieldHelp($fields, $config);
 
-        // Make tertiary identifiers map to class names
-        // Get uninherited ids so different id's can be made available per class
-        $tIdentifiers = $this->getConfigMerged(
-            $config,
-            'tertiaryIdentifiers',
-            Config::UNINHERITED
+        // Re-order the fields in the main tab (it would be nice to do this non-destructively)
+        $fields->findOrMakeTab('Root.Main')
+            ->FieldList()
+            ->changeFieldOrder($this->getConfiguredFieldNames($config));
+
+        $this->addTemplateControlFields($fields, $config);
+
+        return $fields;
+    }
+
+    /**
+     * Convert fields to a different field class where configured
+     *
+     * @param FieldList $fields
+     * @param array $config
+     */
+    public function configureFieldTypes(FieldList $fields, array $config)
+    {
+        $this->modifyFieldWithSetting($fields, $config, 'fieldClass',
+            function(FormField $field, array $config) use ($fields) {
+                $className = $config['fieldClass'];
+                $fields->replaceField($field->getName(), $className::create($field->getName()));
+            }
         );
+    }
 
-        if (is_array($tIdentifiers) && $tIdentifiers) {
-            $fields->replaceField(
-                'TertiaryIdentifier',
-                $tIdentifier = new ListboxField(
-                    'TertiaryIdentifier',
-                    'Visual Options',
-                    $tIdentifiers,
-                    '',
-                    null,
-                    true
-                )
-            );
-        } else {
-            $fields->removeByName('TertiaryIdentifier');
-        }
+    /**
+     * Apply the 'help' key from a template config to fields
+     *
+     * @param FieldList $fields
+     * @param array $config
+     */
+    public function configureFieldHelp(FieldList $fields, array $config)
+    {
+        $this->modifyFieldWithSetting($fields, $config, 'help', function(FormField $field, array $config) {
+            $field->setRightTitle($config['help']);
+        });
+    }
 
+    /**
+     * Apply the 'label' key from a template config as field titles
+     *
+     * @param FieldList $fields
+     * @param array $config
+     */
+    public function configureFieldLabels(FieldList $fields, array $config)
+    {
+        $this->modifyFieldWithSetting($fields, $config, 'label', function(FormField $field, array $config) {
+            $field->setTitle($config['label']);
+        });
+    }
 
-        // Set up slice specific fields
-
-        // Color options for palette fields
-        $colorOptions = $config->get('colorOptions');
-
-        // Color palette for bg
-        $fields->addFieldToTab(
-            'Root.Main',
-            new GroupedColorPaletteField(
-                'BackgroundColor',
-                'Background color',
-                $colorOptions
-            )
-        );
-
-        // Color palette for blocks
-        $fields->addFieldToTab(
-            'Root.Main',
-            new GroupedColorPaletteField(
-                'BlockColor',
-                'Block color',
-                $colorOptions
-            )
-        );
-
-        // Get the tab to ensure the preview is added at the top
+    /**
+     * Add the fields
+     *
+     * @param FieldList $fields
+     * @param array $config
+     */
+    protected function addTemplateControlFields(FieldList $fields, array $config)
+    {
+        // Add the slice preview at the top of the fieldset
         $tab = $fields->findOrMakeTab('Root.Main');
-        $fieldsInTab = $tab->getChildren();
+        $firstField = $tab->getChildren()->first() ? $tab->getChildren()->first()->getName() : null;
 
+        // Add the slice preview at the top of the tab
         $tab->insertBefore(
             new DataObjectPreviewField(
                 'Slice',
                 $this,
                 $this->previewer
             ),
-            isset($fieldsInTab[0]) ? $fieldsInTab[0]->getName() : null //Display the field at the top
+            $firstField
         );
 
+        // Template selection
+        $tab->insertBefore(
+            new DropdownField('Template', 'Template/type', $this->getTemplateNames()),
+            $firstField
+        );
 
-        $this->updateCMSFieldsByConfiguration($config, $fields);
-
-        return $fields;
+        // Visual options selection
+        if (isset($config['visualOptions'])) {
+            $tab->insertBefore(
+                new ListboxField(
+                    'VisualOptions',
+                    'Visual Options',
+                    $config['visualOptions'],
+                    '',
+                    null,
+                    true
+                ),
+                $firstField
+            );
+        }
     }
 
     /**
-     * @param $config
-     * @param $fields
+     * Get a map of template types to human-readable names
+     *
+     * If the `name` key is not configured for a template, the template identifier will be split into words
+     *
+     * @return string[]
      */
-    protected function updateCMSFieldsByConfiguration(Config_ForClass $config, $fields)
+    public function getTemplateNames()
     {
-        // Set up upload folders on file fields
-        $uploadFolder = $config->get('uploadFolder');
-        foreach ($this->getConfigMerged($config, 'uploadFolderFields') as $fieldName) {
-            if ($field = $fields->dataFieldByName($fieldName)) {
-                $field->setFolderName($uploadFolder);
-            }
+        $templates = $this->config()->templates;
+        $map = array();
+
+        foreach ($templates as $name => $config) {
+            $map[$name] = $this->convertCamelCaseToWords($config->name ?: $name);
         }
 
+        return $map;
+    }
 
-        // Hidden fields for this Slice type
-        $shownFields = array_diff(
-            $this->getConfigMerged($config, 'shownFields'),
-            $this->getConfigMerged($config, 'hiddenFields')
-        );
-
-        // Clean up tabs show relevant fields in appropriate tabs
-        // Add non displayed fields to an "AdditionalFields" tab
-        foreach ($fields->saveableFields() as $name => $field) {
-            if (!in_array($name, $shownFields)) {
-                $fields->removeByName($name);
-                if (Director::isDev() || Director::isTest()) {
-                    $fields->addFieldToTab('Root.AdditionalFields', $field);
-                }
-            }
-        }
-
-        // Change any field titles that need it
-        $fieldLabels = $this->getConfigMerged($config, 'fieldLabels');
-        foreach ($fieldLabels as $fieldName => $label) {
-            $fields->renameField($fieldName, $label);
-        }
-
-        // Set field right text
-        $fieldHelp = $this->getConfigMerged($config, 'fieldHelp');
-        foreach ($fieldHelp as $fieldName => $helpText) {
-            $field = $fields->datafieldByName($fieldName);
-
-            if ($field) {
-                $field->setRightTitle($helpText);
-            }
+    public function getDefaultTemplate()
+    {
+        if ($this->config()->defaultTemplate) {
+            return $this->config()->defaultTemplate;
+        } else {
+            $identifiers = $this->getAvailableTemplates();
+            return reset($identifiers);
         }
     }
 
     /**
-     * Gets an array for a specified config key, using the secondary identifier + default options combined
-     * @param Config_ForClass $config
-     * @param                 $configKey
-     * @param int             $sourceOptions
-     * @return array
-     */
-    public function getConfigMerged(Config_ForClass $config, $configKey, $sourceOptions = 0)
-    {
-        $fields = $config->get($configKey, $sourceOptions);
-
-        return array_merge(
-            isset($fields['Default']) && is_array($fields['Default']) ? $fields['Default'] : array(),
-            isset($fields[$this->SecondaryIdentifier]) && is_array($fields[$this->SecondaryIdentifier]) ? $fields[$this->SecondaryIdentifier] : array()
-        );
-    }
-
-    /**
-     * Checks if there is a tertiary identifier matching the requested one
-     * 
+     * Check if there is a visual option matching the name specified
+     *
      * Used from templates like <% if $hasLayoutOption('underline') %><% end_if %>
-     * @param $option
+     *
+     * @param string $name
      * @return bool
      */
-    public function hasLayoutOption($option)
+    public function hasLayoutOption($name)
     {
-        return isset($this->record['TertiaryIdentifier']) && in_array(
-            $option,
+        return isset($this->record['VisualOption']) && in_array(
+            $name,
             explode(
                 ',',
-                $this->record['TertiaryIdentifier']
+                $this->record['VisualOption']
             )
         );
     }
 
     /**
-     * Can be used for classnames
-     * 
-     * Gets tertiary identifiers in a format like "underline no-margin-bottom"
-     * @return mixed
-     */
-    public function getTertiaryIdentifiers()
-    {
-        return str_replace(
-            ',',
-            ' ',
-            isset($this->record['TertiaryIdentifier']) ? $this->record['TertiaryIdentifier'] : ''
-        );
-    }
-
-    /**
-     * Get a nice comma separated version of the tertiary identifiers like "No Margin Bottom, Underline"
-     * @return string
-     */
-    public function getTertiaryIdentifiersNice()
-    {
-        $tIdentifiersNice = array();
-        if (isset($this->record['TertiaryIdentifier'])) {
-            $config = $this->getConfigMerged(
-                $this->config(),
-                'tertiaryIdentifiers',
-                Config::UNINHERITED
-            );
-            $tIdentifiers = explode(',', $this->record['TertiaryIdentifier']);
-            $tIdentifiersNice = array();
-            foreach ($tIdentifiers as $identifier) {
-                $tIdentifiersNice[] = $config[$identifier];
-            }
-        }
-        return implode(', ', $tIdentifiersNice);
-    }
-
-    /**
-     * This returns a Template for use by the preview grid field and field
-     * 
-     * If there is no fields specific on the to be rendered object then we default in some
-     * fields from the config.
+     * Returns a rendered state to use with the dataobject preview field
+     *
      * @return string
      */
     public function getPreviewHtml()
     {
-        $hasOneData = array ();
-        // Populate record with default values if needed
-        if (!$this->ID || !$this->Identifier) {
-
-            $this->record = array_filter($this->record);
-            
-            $this->record = array_merge(
-                $exampleFields = $this->getConfigMerged($this->config(), 'exampleFields'),
-                $this->record
-            );
-
-
-            $injectorCreator = new InjectionCreator();
-            $hasOneData = array ();
-            foreach ($this->has_one() as $relation => $type) {
-                if (!$this->{$relation.'ID'} && isset($exampleFields[$relation])) {
-                    switch ($type) {
-                        case 'Image' || is_subclass_of($type, "Image"):
-                            $hasOneData[$relation] = $injectorCreator->create('Image_Cached', $exampleFields[$relation]);                            
-                        break;
-                    }
-                }
-            }
-        }
-
-        Config::inst()->update('SSViewer', 'theme_enabled', 'heyday');
-
         Requirements::clear();
-        
+
         $previewStylesheets = $this->config()->previewStylesheets;
-        
+
         if (is_array($previewStylesheets)) {
             foreach($previewStylesheets as $css) {
                 Requirements::css($css);
@@ -274,7 +201,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         }
 
         $result = $this->customise(array(
-            'Slice' => $this->customise($hasOneData)->forTemplate()
+            'Slice' => $this->forTemplate()
         ))->renderWith('SliceWrapper');
 
         Requirements::restore();
@@ -284,6 +211,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
 
     /**
      * Used in templates to get a iframe preview of the slice
+     *
      * @return string
      */
     public function getPreview()
@@ -292,7 +220,8 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     }
 
     /**
-     * Use in the actual rendering of the slice. Uses `getSSViewer` (with the Secondary Identifier) for rendering
+     * Render the slice
+     *
      * @return HTMLText
      */
     public function forTemplate()
@@ -317,8 +246,232 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         }
     }
 
-    public function getTemplateClass()
+    /**
+     * Finds all available template based on the ClassName
+     *
+     * @param array $map
+     * @return array
+     */
+    public function getAvailableTemplates($map = null)
+    {
+        $prefix = strtolower($this->getTemplateClass());
+        $currentTheme = Config::inst()->get('SSViewer', 'theme');
+        $templates = SS_TemplateLoader::instance()->getManifest()->getTemplates();
+        $availableTemplates = array();
+
+        foreach ($templates as $templateName => $template) {
+            if (
+                fnmatch($prefix . '_*', $templateName)
+                && isset($template['themes'])
+                && isset($template['themes'][$currentTheme])
+            ) {
+                // SilverStripe transforms all template names to lowercase.
+                // We want the original filename, so this needs to be extracted from the template file path
+                $templateName = $this->getFirstLeafNode($template);
+                $templateName = substr(basename($templateName), strlen($prefix) + 1, -3);
+                $availableTemplates[$templateName] = $templateName;
+            }
+        }
+
+        $availableTemplates = is_array($availableTemplates) ? $availableTemplates : array();
+
+        if (is_array($map)) {
+            foreach ($availableTemplates as $key => $value) {
+                $availableTemplates[$key] = isset($map[$value]) ? $map[$value] : $value;
+            }
+        }
+
+        return $availableTemplates;
+    }
+
+    /**
+     * Tries to get an SSViewer based on the current configuration
+     *
+     * @throws Exception
+     * @return SSViewer
+     */
+    protected function getSSViewer()
+    {
+        return new SSViewer(
+            $this->getTemplateList()
+        );
+    }
+
+    /**
+     * Return the class name to prefix templates with
+     *
+     * This method should be called through $this within this extension so that it
+     * can be overridden in the owner class, or by extensions/traits on the owner class.
+     *
+     * @return string
+     */
+    protected function getTemplateClass()
     {
         return $this->ClassName;
+    }
+
+    /**
+     * Return a list of templates to pass to an SSViewer when rendering
+     *
+     * @return string[]
+     * @throws Exception
+     */
+    protected function getTemplateList()
+    {
+        $templates = SS_TemplateLoader::instance()->findTemplates(
+            $tryTemplates = $this->getTemplateSearchNames(), Config::inst()->get('SSViewer', 'theme')
+        );
+
+        if (!$templates) {
+            throw new Exception(
+                'Can\'t find a template from list: "'.implode('", "', $tryTemplates).'"'
+            );
+        }
+
+        return reset($templates);
+    }
+
+    /**
+     * Return a list of template file names that can be used for the slice
+     *
+     * @return array
+     */
+    protected function getTemplateSearchNames()
+    {
+        $templates = array();
+        $prefix = $this->getTemplateClass();
+
+        if (!empty($this->Template)) {
+            $templates[] = $prefix . '_' . $this->Template;
+        }
+
+        return $templates;
+    }
+
+    /**
+     * Given a set of nested arrays, return the first leaf encountered
+     *
+     * @param string[] $tree
+     * @return mixed
+     */
+    protected function getFirstLeafNode(array $tree)
+    {
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveArrayIterator($tree),
+            RecursiveIteratorIterator::LEAVES_ONLY
+        );
+
+        foreach($iterator as $value) {
+            return $value;
+        }
+    }
+
+    /**
+     * Convert identifiers into words to show to the user
+     *
+     * @param string $camelCase
+     * @return string
+     */
+    protected function convertCamelCaseToWords($camelCase)
+    {
+        $words = trim(strtolower(preg_replace('/_?([A-Z])/', ' $1', $camelCase)));
+
+        return ucfirst(strtolower($words));
+    }
+
+    /**
+     * Remove all fields except those with specified in a template config
+     *
+     * @param FieldList $fields
+     * @param array $templateConfig
+     */
+    protected function removeUnconfiguredFields(FieldList $fields, array $templateConfig)
+    {
+        $configured = $this->getConfiguredFieldNames($templateConfig);
+        $inFieldList = array_keys($fields->dataFields());
+        $unconfigured = array_diff($inFieldList, $configured);
+
+        if (Director::isDev()) {
+            foreach ($unconfigured as $fieldName) {
+                $fields->addFieldToTab('Root.UnusedFields', $fields->dataFieldByName($fieldName));
+            }
+        } else {
+            $fields->removeByName($unconfigured);
+        }
+    }
+
+    /**
+     * @param array $templateConfig
+     * @return string[]
+     */
+    protected function getConfiguredFieldNames(array $templateConfig)
+    {
+        return isset($templateConfig['fields']) ? array_keys($templateConfig['fields']) : array();
+    }
+
+    /**
+     * Run a callback for each field config that contains a key
+     *
+     * @param FieldList $fields
+     * @param array $config
+     * @param string $settingKey
+     * @param callable $callback
+     */
+    protected function modifyFieldWithSetting(FieldList $fields, array $config, $settingKey, $callback)
+    {
+        if (isset($config['fields'])) {
+            foreach ($config['fields'] as $key => $fieldConfig) {
+                $field = $fields->dataFieldByName($key);
+
+                if ($field && isset($fieldConfig[$settingKey])) {
+                    call_user_func($callback, $field, $fieldConfig);
+                }
+            }
+        }
+    }
+
+    /**
+     * Get the config for the template name currently configured in $this->Template
+     *
+     * @return array
+     */
+    protected function getCurrentTemplateConfig()
+    {
+        return $this->getTemplateConfig($this->Template ?: $this->getDefaultTemplate());
+    }
+
+    /**
+     * Get the config for a template of this slice
+     *
+     * @param string $name
+     * @return array
+     */
+    protected function getTemplateConfig($name)
+    {
+        $config = $this->config()->get('templates') ?: array();
+
+        if (isset($config[$name])) {
+            return $this->normaliseTemplateConfig($config[$name]);
+        }
+    }
+
+    /**
+     * @param array $config
+     * @return array
+     */
+    protected function normaliseTemplateConfig(array $config)
+    {
+        // Transform "FieldName: 'Field title'" into "FieldName.label: 'Field title'" as a config shortcut
+        if (isset($config['fields'])) {
+            foreach ($config['fields'] as $fieldName => &$fieldConfig) {
+                if (!$fieldConfig || is_scalar($config)) {
+                    $fieldConfig = array(
+                        'label' => $fieldConfig
+                    );
+                }
+            }
+        }
+
+        return $config;
     }
 }
