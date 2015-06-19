@@ -17,6 +17,16 @@ Slice:
     - "AdaptiveContentRelated('Page')"
 ```
 
+## Adding Slices to Page
+
+This module comes with an extension for easily setting up Slices on Page:
+
+```yaml
+Page:
+  extensions:
+    - PageSlicesExtension
+```
+
 ## Subclassing Slice
 
 Subclassing `Slice` is a normal use case, however note that when subclassing it, you'll need to override the method `getBaseSliceClass` method in your "base" slice subclass (the one you point to in a has_many from Page) for the slice to save correctly:
