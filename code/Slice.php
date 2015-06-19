@@ -104,7 +104,8 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         $firstField = $tab->getChildren()->first() ? $tab->getChildren()->first()->getName() : null;
 
         // Add the slice preview at the top of the tab
-        $tab->insertBefore(
+        $fields->addFieldToTab(
+            'Root.Main',
             new DataObjectPreviewField(
                 'Slice',
                 $this,
@@ -114,14 +115,16 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         );
 
         // Template selection
-        $tab->insertBefore(
+        $fields->addFieldToTab(
+            'Root.Main',
             new DropdownField('Template', 'Template/type', $this->getTemplateNames()),
             $firstField
         );
 
         // Visual options selection
         if (isset($config['visualOptions'])) {
-            $tab->insertBefore(
+            $fields->addFieldToTab(
+                'Root.Main',
                 new ListboxField(
                     'VisualOptions',
                     'Visual Options',
