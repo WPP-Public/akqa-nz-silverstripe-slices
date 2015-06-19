@@ -49,6 +49,14 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         return $fields;
     }
 
+    public function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+
+        // Update class name if it needs to change for the selected identifier
+        $this->setClassNameByTemplate($this->Template);
+    }
+
     /**
      * Convert fields to a different field class where configured
      *
@@ -303,14 +311,52 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     /**
      * Return the class name to prefix templates with
      *
-     * This method should be called through $this within this extension so that it
-     * can be overridden in the owner class, or by extensions/traits on the owner class.
-     *
      * @return string
      */
     protected function getTemplateClass()
     {
-        return $this->ClassName;
+        return $this->getBaseSliceClass();
+    }
+
+    /**
+     * Return the class name to revert to when no 'className' key is set in the template config
+     *
+     * This is needed to determine which subclass of Slice should be considered the base one, since when the
+     * class name is changed for a template (by configuration), there's no way to tell what subclass was the
+     * original one that should be reverted to.
+     *
+     * @return string
+     */
+    protected function getBaseSliceClass()
+    {
+        return __CLASS__;
+    }
+
+    /**
+     * Change class name based on the config for a template
+     */
+    protected function setClassNameByTemplate($templateName)
+    {
+        $config = $this->getTemplateConfig($templateName);
+
+        if (isset($config['className'])) {
+            if (!ClassInfo::exists($config['className'])) {
+                throw new RuntimeException("Cannot change {$this->getBaseSliceClass()} be the non-existent class '{$config['className']}'");
+            }
+
+            $this->setClassName($config['className']);
+
+            // Prevent an error occurring when changing the class of an object that hasn't been saved yet
+            if($this->unsavedRelations) {
+                foreach($this->unsavedRelations as $name => $list) {
+                    if(!$this->hasMethod($name)) {
+                        unset($this->unsavedRelations[$name]);
+                    }
+                }
+            }
+        } else {
+            $this->setClassName($this->getBaseSliceClass());
+        }
     }
 
     /**

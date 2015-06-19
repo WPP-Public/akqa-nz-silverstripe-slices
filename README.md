@@ -17,6 +17,27 @@ Slice:
     - "AdaptiveContentRelated('Page')"
 ```
 
+## Subclassing Slice
+
+Subclassing `Slice` is a normal use case, however note that when subclassing it, you'll need to override the method `getBaseSliceClass` method in your "base" slice subclass (the one you point to in a has_many from Page) for the slice to save correctly:
+
+```php
+class ContentSlice extends Slice
+{
+    protected function getBaseSliceClass()
+    {
+        return __CLASS__;
+    }
+}
+
+class VideoSlice extends ContentSlice
+{
+    // Subclasses of your 'base' subclass don't need anything special
+}
+```
+
+This is due to the the module needing a "default" class to fall back to when the `className` key has not been set in a template config.
+
 ### Example config
 
 ```yaml
