@@ -159,7 +159,11 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         $map = array();
 
         foreach ($templates as $name => $config) {
-            $map[$name] = $this->convertCamelCaseToWords($config->name ?: $name);
+            if (isset($config['name'])) {
+                $map[$name] = $config['name'];
+            } else {
+                $map[$name] = $this->convertCamelCaseToWords($name);
+            }
         }
 
         return $map;
