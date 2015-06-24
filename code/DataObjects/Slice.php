@@ -490,7 +490,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
      */
     protected function getCurrentTemplateConfig()
     {
-        return $this->getTemplateConfig($this->Template ?: $this->getDefaultTemplate());
+        return $this->getTemplateConfig($this->Template ?: $this->getDefaultTemplate()) ?: array();
     }
 
     /**
