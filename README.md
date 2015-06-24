@@ -17,7 +17,11 @@ Slice:
     - "AdaptiveContentRelated('Page')"
 ```
 
-## Adding Slices to Page
+### Templates
+
+Each slice template has it's own template with the name `[SliceClass]_[TemplateName]`. These can go in `themes/[theme]/templates/Slices` to separate them from the other templates in your site. 
+
+### Adding Slices to Page
 
 This module comes with an extension for easily setting up Slices on Page:
 
@@ -27,7 +31,18 @@ Page:
     - PageSlicesExtension
 ```
 
-## Subclassing Slice
+In templates, this extension is used as:
+
+```html
+<% if $Slices %>
+    <% loop $Slices %>
+        $forTemplate
+    <% end_loop %>
+<% end_if %>
+```
+
+
+### Subclassing Slice
 
 Subclassing `Slice` is a normal use case, however note that when subclassing it, you'll need to override the method `getBaseSliceClass` method in your "base" slice subclass (the one you point to in a has_many from Page) for the slice to save correctly:
 
@@ -47,6 +62,7 @@ class VideoSlice extends ContentSlice
 ```
 
 This is due to the the module needing a "default" class to fall back to when the `className` key has not been set in a template config.
+
 
 ### Example config
 
