@@ -513,7 +513,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         // Transform "FieldName: 'Field title'" into "FieldName.label: 'Field title'" as a config shortcut
         if (isset($config['fields'])) {
             foreach ($config['fields'] as $fieldName => &$fieldConfig) {
-                if (!$fieldConfig || is_scalar($config)) {
+                if (!is_array($fieldConfig)) {
                     $fieldConfig = array(
                         'label' => $fieldConfig
                     );
