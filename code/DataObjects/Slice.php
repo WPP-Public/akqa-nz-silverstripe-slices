@@ -53,6 +53,11 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     {
         parent::onBeforeWrite();
 
+        // Clear visual options when the template changes to prevent them hanging around
+        if ($this->isChanged('Template', 2)) {
+            $this->VisualOptions = '';
+        }
+
         // Update class name if it needs to change for the selected identifier
         $this->setClassNameByTemplate($this->Template);
     }
