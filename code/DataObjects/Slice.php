@@ -189,11 +189,11 @@ class Slice extends DataObject implements DataObjectPreviewInterface
      */
     public function hasLayoutOption($name)
     {
-        return isset($this->record['VisualOption']) && in_array(
+        return isset($this->record['VisualOptions']) && in_array(
             $name,
             explode(
                 ',',
-                $this->record['VisualOption']
+                $this->record['VisualOptions']
             )
         );
     }
