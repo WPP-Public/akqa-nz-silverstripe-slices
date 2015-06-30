@@ -468,7 +468,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     }
 
     /**
-     * Run a callback for each field config that contains a key
+     * Run a callback for each field config that contains a setting key
      *
      * @param FieldList $fields
      * @param array $config
