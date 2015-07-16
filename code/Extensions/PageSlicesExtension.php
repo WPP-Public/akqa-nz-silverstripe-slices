@@ -32,7 +32,7 @@ class PageSlicesExtension extends DataExtension
     {
         $fields->addFieldToTab(
             $tabName,
-            new GridField(
+            $grid = new GridField(
                 'Slices',
                 'Slices',
                 $dataList ?: $this->owner->Slices(),
@@ -45,5 +45,18 @@ class PageSlicesExtension extends DataExtension
         $gridConfig->removeComponentsByType('GridFieldDeleteAction');
         $gridConfig->removeComponentsByType('GridFieldDetailForm');
         $gridConfig->addComponent(new VersionedDataObjectDetailsForm());
+
+        // Change columns displayed
+        $dataColumns = $gridConfig->getComponentByType('GridFieldDataColumns');
+        $dataColumns->setDisplayFields($this->modifyDisplayFields(
+            $dataColumns->getDisplayFields($grid)
+        ));
+    }
+
+    protected function modifyDisplayFields(array $fields)
+    {
+        unset($fields['Title']);
+
+        return $fields;
     }
 }

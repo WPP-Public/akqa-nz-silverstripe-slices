@@ -45,8 +45,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
             $fields->findOrMakeTab('Root.Main')
                 ->FieldList()
                 ->changeFieldOrder($this->getConfiguredFieldNames($config));
-
-        } 
+        }
 
         $this->addTemplateControlFields($fields, $config);
 
