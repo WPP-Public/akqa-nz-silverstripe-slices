@@ -38,6 +38,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         $this->configureFieldTypes($fields, $config);
         $this->configureFieldLabels($fields, $config);
         $this->configureFieldHelp($fields, $config);
+        $this->configureUploadFolder($fields);
 
         // Re-order the fields in the main tab (it would be nice to do this non-destructively)
         $fields->findOrMakeTab('Root.Main')
@@ -68,7 +69,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
      * @param FieldList $fields
      * @param array $config
      */
-    public function configureFieldTypes(FieldList $fields, array $config)
+    protected function configureFieldTypes(FieldList $fields, array $config)
     {
         $this->modifyFieldWithSetting($fields, $config, 'fieldClass',
             function(FormField $field, array $config) use ($fields) {
@@ -84,7 +85,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
      * @param FieldList $fields
      * @param array $config
      */
-    public function configureFieldHelp(FieldList $fields, array $config)
+    protected function configureFieldHelp(FieldList $fields, array $config)
     {
         $this->modifyFieldWithSetting($fields, $config, 'help', function(FormField $field, array $config) {
             $field->setRightTitle($config['help']);
@@ -97,7 +98,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
      * @param FieldList $fields
      * @param array $config
      */
-    public function configureFieldLabels(FieldList $fields, array $config)
+    protected function configureFieldLabels(FieldList $fields, array $config)
     {
         $this->modifyFieldWithSetting($fields, $config, 'label', function(FormField $field, array $config) {
             $field->setTitle($config['label']);
@@ -105,7 +106,8 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     }
 
     /**
-     * Add the fields
+     * Add built-in controls for preview and changing the template and visual options
+     * These are always visible and can't be hidden from the slices config
      *
      * @param FieldList $fields
      * @param array $config
@@ -148,6 +150,19 @@ class Slice extends DataObject implements DataObjectPreviewInterface
                 ),
                 $firstField
             );
+        }
+    }
+
+    protected function configureUploadFolder(FieldList $fields)
+    {
+        $fieldNames = (array) $this->config()->uploadFolderFields;
+
+        foreach ($fieldNames as $name) {
+            $field = $fields->dataFieldByName($name);
+
+            if ($field instanceof FileField) {
+                $field->setFolderName('Uploads/Slices/' . $this->Template);
+            }
         }
     }
 

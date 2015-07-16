@@ -68,6 +68,17 @@ This is due to the the module needing a "default" class to fall back to when the
 
 ```yaml
 Slice:
+  
+  # Define stylesheets to be used when previewing slices in the CMS
+  previewStylesheets:
+    - /themes/base/css/styles.css
+
+  # Automatically configure the upload folder for these file fields on Slice
+  uploadFolderFields:
+    - LeadImage
+    - SecondaryImage
+    - LeadFile
+
   templates:
     Quote:
       fields:
