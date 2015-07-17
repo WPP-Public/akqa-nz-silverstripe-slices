@@ -35,10 +35,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         $config = $this->getCurrentTemplateConfig();
 
         $this->removeUnconfiguredFields($fields, $config);
-        $this->configureFieldTypes($fields, $config);
-        $this->configureFieldLabels($fields, $config);
-        $this->configureFieldHelp($fields, $config);
-        $this->configureUploadFolder($fields);
+        $this->configureFieldsFromConfig($fields, $config);
 
         // Re-order the fields in the main tab (it would be nice to do this non-destructively)
         if (isset($config['fields']) && count($config['fields'])) {
@@ -63,6 +60,20 @@ class Slice extends DataObject implements DataObjectPreviewInterface
 
         // Update class name if it needs to change for the selected identifier
         $this->setClassNameByTemplate($this->Template);
+    }
+
+    /**
+     * Configure fields using a template's config
+     *
+     * @param FieldList $fields
+     * @param array $config
+     */
+    protected function configureFieldsFromConfig(FieldList $fields, array $config)
+    {
+        $this->configureFieldTypes($fields, $config);
+        $this->configureFieldLabels($fields, $config);
+        $this->configureFieldHelp($fields, $config);
+        $this->configureUploadFolder($fields);
     }
 
     /**

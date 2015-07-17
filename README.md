@@ -63,6 +63,15 @@ class VideoSlice extends ContentSlice
 
 This is due to the the module needing a "default" class to fall back to when the `className` key has not been set in a template config.
 
+#### Customising CMS fields
+
+Adding and modifying fields in `YourBaseSlice::getCMSFields` is an expected use case. Note that things configured in the slices YAML configuration will be overriden if, for example, you replace a field with something custom. In this case, you can re-apply the slices config with the following at the end of your `getCMSFields` function:
+
+```php
+// Re-apply slices config
+$config = $this->getCurrentTemplateConfig();
+$this->configureFieldsFromConfig($fields, $config);
+```
 
 ### Example config
 
