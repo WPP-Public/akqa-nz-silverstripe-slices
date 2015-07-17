@@ -39,9 +39,11 @@ class Slice extends DataObject implements DataObjectPreviewInterface
 
         // Re-order the fields in the main tab (it would be nice to do this non-destructively)
         if (isset($config['fields']) && count($config['fields'])) {
-            $fields->findOrMakeTab('Root.Main')
-                ->FieldList()
-                ->changeFieldOrder($this->getConfiguredFieldNames($config));
+            $tabFields = $fields->findOrMakeTab('Root.Main')->FieldList();
+
+            if ($tabFields->dataFields()) {
+                $tabFields->changeFieldOrder($this->getConfiguredFieldNames($config));
+            }
         }
 
         $this->addTemplateControlFields($fields, $config);
