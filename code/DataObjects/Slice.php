@@ -428,6 +428,15 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         $unconfigured = array_diff($inFieldList, $configured);
 
         if (Director::isDev()) {
+            $fields->addFieldToTab('Root.UnusedFields', new LiteralField(
+                'SlicesUnusedFieldsHelp',
+                <<<EOD
+<div class="message" style="margin-top: 0">
+    <p><strong>Note: this tab is only visible when in dev mode.</strong></p>
+    <p>All fields that aren't configured in the selected slice template are dumped in here by <code>Slice::removeUnconfiguredFields</code></p>
+</div>
+EOD
+            ));
             foreach ($unconfigured as $fieldName) {
                 $fields->addFieldToTab('Root.UnusedFields', $fields->dataFieldByName($fieldName));
             }
