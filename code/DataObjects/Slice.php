@@ -288,16 +288,10 @@ class Slice extends DataObject implements DataObjectPreviewInterface
      */
     public function forTemplate()
     {
-        try {
-            return $this->renderWith(
-                $this->getSSViewer(),
-                null
-            );
-        } catch (Exception $e) {
-            // This probably needs to throw, at least in dev mode
-            // It's mostly a convinence thing to stop the CMS breaking on the user
-            return false;
-        }
+        return $this->renderWith(
+            $this->getSSViewer(),
+            null
+        );
     }
 
     /**
