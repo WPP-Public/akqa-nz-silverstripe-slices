@@ -19,7 +19,7 @@ Slice:
 
 ### Templates
 
-Each slice template has it's own template with the name `[SliceClass]_[TemplateName]`. These can go in `themes/[theme]/templates/Slices` to separate them from the other templates in your site. 
+Each slice type/template has it's own template file with the name `[BaseSliceClass]_[TemplateName]`. These can go in `themes/[theme]/templates/Slices` to separate them from the other templates in your site. 
 
 ### Adding Slices to Page
 
@@ -31,7 +31,7 @@ Page:
     - PageSlicesExtension
 ```
 
-In templates, this extension is used as:
+In templates, all slices can be rendered using this:
 
 ```html
 <% if $Slices %>
@@ -73,20 +73,31 @@ $config = $this->getCurrentTemplateConfig();
 $this->configureFieldsFromConfig($fields, $config);
 ```
 
+#### Customising slice previews in the CMS
+
+![Slice preview in CMS](docs/images/dataobject-preview-slice.png)
+
+A preview of a slice renders the CMS in an iframe when editing and browsing. Out of the box, previews are rendered inside a basic HTML page wrapper: `silverstripe-slices/templates/SliceWrapper.ss`. You can override this wrapper in your own theme to customise how slice previews are delivered.
+
 ### Example config
 
 ```yaml
 Slice:
-  
+
   # Define stylesheets to be used when previewing slices in the CMS
   previewStylesheets:
     - /themes/base/css/styles.css
 
   # Automatically configure the upload folder for these file fields on Slice
+  # Files and images will be uploaded to assets/Uploads/Slices/[TemplateName]
   uploadFolderFields:
     - LeadImage
     - SecondaryImage
     - LeadFile
+
+  # The default slice template can be specified, or defaults to the first defined
+  # This is just what is selected by default when a new slice is created
+  defaultTemplate: TwoColumnImage
 
   templates:
     Quote:
@@ -137,3 +148,7 @@ Slice:
         image-right: Image in right column
         title-centered: Center title above columns
 ```
+
+## Compatibility
+
+This module requires at least SilverStripe 3.1 and PHP 5.3.

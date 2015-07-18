@@ -204,6 +204,11 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         return $map;
     }
 
+    /**
+     * Get the template config name to be selected by default for new slices
+     *
+     * @return string
+     */
     public function getDefaultTemplate()
     {
         if ($this->config()->defaultTemplate) {
@@ -292,6 +297,8 @@ class Slice extends DataObject implements DataObjectPreviewInterface
                 $data
             ) : false;
         } catch (Exception $e) {
+            // This probably needs to throw, at least in dev mode
+            // It's mostly a convinence thing to stop the CMS breaking on the user
             return false;
         }
     }
