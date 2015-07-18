@@ -255,11 +255,18 @@ class Slice extends DataObject implements DataObjectPreviewInterface
             }
         }
 
+        // The theme can be disabled when in the context of the CMS, which causes includes to fail
+        $themeEnabled = Config::inst()->get('SSViewer', 'theme_enabled');
+        Config::inst()->update('SSViewer', 'theme_enabled', true);
+
         $result = $this->customise(array(
             'Slice' => $this->forTemplate()
         ))->renderWith('SliceWrapper');
 
         Requirements::restore();
+
+        // Restore previous theme_enabled setting
+        Config::inst()->update('SSViewer', 'theme_enabled', $themeEnabled);
 
         return $result;
     }
