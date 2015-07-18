@@ -214,7 +214,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         if ($this->config()->defaultTemplate) {
             return $this->config()->defaultTemplate;
         } else {
-            $identifiers = $this->getAvailableTemplates();
+            $identifiers = array_keys($this->config()->templates ?: array());
             return reset($identifiers);
         }
     }
@@ -288,64 +288,16 @@ class Slice extends DataObject implements DataObjectPreviewInterface
      */
     public function forTemplate()
     {
-        if ($arguments = func_get_args()) {
-            $data = array();
-            $i = 1;
-            foreach ($arguments as $argument) {
-                $data["Val$i"] = empty($argument) ? false : $argument;
-                $i++;
-            }
-        } else {
-            $data = null;
-        }
         try {
-            return $this->ClassName !== 'Slice' ? $this->renderWith(
+            return $this->renderWith(
                 $this->getSSViewer(),
-                $data
-            ) : false;
+                null
+            );
         } catch (Exception $e) {
             // This probably needs to throw, at least in dev mode
             // It's mostly a convinence thing to stop the CMS breaking on the user
             return false;
         }
-    }
-
-    /**
-     * Finds all available template based on the ClassName
-     *
-     * @param array $map
-     * @return array
-     */
-    public function getAvailableTemplates($map = null)
-    {
-        $prefix = strtolower($this->getTemplateClass());
-        $currentTheme = Config::inst()->get('SSViewer', 'theme');
-        $templates = SS_TemplateLoader::instance()->getManifest()->getTemplates();
-        $availableTemplates = array();
-
-        foreach ($templates as $templateName => $template) {
-            if (
-                fnmatch($prefix . '_*', $templateName)
-                && isset($template['themes'])
-                && isset($template['themes'][$currentTheme])
-            ) {
-                // SilverStripe transforms all template names to lowercase.
-                // We want the original filename, so this needs to be extracted from the template file path
-                $templateName = $this->getFirstLeafNode($template);
-                $templateName = substr(basename($templateName), strlen($prefix) + 1, -3);
-                $availableTemplates[$templateName] = $templateName;
-            }
-        }
-
-        $availableTemplates = is_array($availableTemplates) ? $availableTemplates : array();
-
-        if (is_array($map)) {
-            foreach ($availableTemplates as $key => $value) {
-                $availableTemplates[$key] = isset($map[$value]) ? $map[$value] : $value;
-            }
-        }
-
-        return $availableTemplates;
     }
 
     /**
@@ -448,24 +400,6 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         }
 
         return $templates;
-    }
-
-    /**
-     * Given a set of nested arrays, return the first leaf encountered
-     *
-     * @param string[] $tree
-     * @return mixed
-     */
-    protected function getFirstLeafNode(array $tree)
-    {
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveArrayIterator($tree),
-            RecursiveIteratorIterator::LEAVES_ONLY
-        );
-
-        foreach($iterator as $value) {
-            return $value;
-        }
     }
 
     /**
