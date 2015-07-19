@@ -389,9 +389,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         $templates = array();
         $prefix = $this->getTemplateClass();
 
-        if (!empty($this->Template)) {
-            $templates[] = $prefix . '_' . $this->Template;
-        }
+        $templates[] = $prefix . '_' . ($this->Template ?: $this->getDefaultTemplate());
 
         return $templates;
     }
