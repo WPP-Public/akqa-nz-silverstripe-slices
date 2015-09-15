@@ -8,6 +8,11 @@
 			"name": "Cam Spiers",
 			"email": "cameron@heyday.co.nz",
 			"role": "Developer"
+		},
+		{
+			"name": "Stephen Holdaway",
+			"email": "stephen@heyday.co.nz",
+			"role": "Developer"
 		}
 	],
 	"require": {
@@ -15,5 +20,10 @@
 		"ajshort/silverstripe-gridfieldextensions": "~1.0",
 		"heyday/silverstripe-dataobjectpreview": "~1.0",
 		"heyday/silverstripe-versioneddataobjects": "~1.0"
+	},
+	"extra": {
+		"branch-alias": {
+			"dev-master": "1.0.x-dev"
+		}
 	}
 }
