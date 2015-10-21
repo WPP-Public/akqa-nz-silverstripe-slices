@@ -44,7 +44,7 @@ class PageSlicesExtension extends DataExtension
         $gridConfig->addComponent(new GridFieldVersionedOrderableRows('Sort'));
         $gridConfig->removeComponentsByType('GridFieldDeleteAction');
         $gridConfig->removeComponentsByType('GridFieldDetailForm');
-        $gridConfig->addComponent(new VersionedDataObjectDetailsForm());
+        $gridConfig->addComponent(new SliceDetailsForm());
 
         // Change columns displayed
         $dataColumns = $gridConfig->getComponentByType('GridFieldDataColumns');

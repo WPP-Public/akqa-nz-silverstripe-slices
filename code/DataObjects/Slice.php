@@ -65,6 +65,33 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     }
 
     /**
+     * Change class name based on the config for a template
+     */
+    public function setClassNameByTemplate($templateName)
+    {
+        $config = $this->getTemplateConfig($templateName);
+
+        if (isset($config['className'])) {
+            if (!ClassInfo::exists($config['className'])) {
+                throw new RuntimeException("Cannot change {$this->getBaseSliceClass()} be the non-existent class '{$config['className']}'");
+            }
+
+            $this->setClassName($config['className']);
+
+            // Prevent an error occurring when changing the class of an object that hasn't been saved yet
+            if($this->unsavedRelations) {
+                foreach($this->unsavedRelations as $name => $list) {
+                    if(!$this->hasMethod($name)) {
+                        unset($this->unsavedRelations[$name]);
+                    }
+                }
+            }
+        } else {
+            $this->setClassName($this->getBaseSliceClass());
+        }
+    }
+
+    /**
      * Configure fields using a template's config
      *
      * @param FieldList $fields
@@ -329,33 +356,6 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     protected function getBaseSliceClass()
     {
         return __CLASS__;
-    }
-
-    /**
-     * Change class name based on the config for a template
-     */
-    protected function setClassNameByTemplate($templateName)
-    {
-        $config = $this->getTemplateConfig($templateName);
-
-        if (isset($config['className'])) {
-            if (!ClassInfo::exists($config['className'])) {
-                throw new RuntimeException("Cannot change {$this->getBaseSliceClass()} be the non-existent class '{$config['className']}'");
-            }
-
-            $this->setClassName($config['className']);
-
-            // Prevent an error occurring when changing the class of an object that hasn't been saved yet
-            if($this->unsavedRelations) {
-                foreach($this->unsavedRelations as $name => $list) {
-                    if(!$this->hasMethod($name)) {
-                        unset($this->unsavedRelations[$name]);
-                    }
-                }
-            }
-        } else {
-            $this->setClassName($this->getBaseSliceClass());
-        }
     }
 
     /**
