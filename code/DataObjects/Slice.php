@@ -161,15 +161,22 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         $firstField = $tab->getChildren()->first() ? $tab->getChildren()->first()->getName() : null;
 
         // Add the slice preview at the top of the tab
-        $fields->addFieldToTab(
-            'Root.Main',
-            new DataObjectPreviewField(
-                'Slice',
-                $this,
-                $this->previewer
-            ),
-            $firstField
-        );
+        try {
+            $this->getTemplateList();
+            $fields->addFieldToTab(
+                'Root.Main',
+                new DataObjectPreviewField(
+                    'Slice',
+                    $this,
+                    $this->previewer
+                ),
+                $firstField
+            );
+        } catch (Exception $e) {
+            $fields->addFieldToTab('Root.Main', new LiteralField('Slice',
+                '<div class="message error"><strong>Unable to render slice preview:</strong> '.htmlentities($e->getMessage()).'</div>'
+            ), $firstField);
+        }
 
         // Template selection
         $fields->addFieldToTab(
