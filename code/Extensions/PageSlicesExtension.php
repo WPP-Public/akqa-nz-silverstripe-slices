@@ -30,12 +30,18 @@ class PageSlicesExtension extends DataExtension
      */
     public function addSlicesCmsTab(FieldList $fields, $tabName = 'Root.Slices', $dataList = null)
     {
+        if (!$dataList) {
+            $dataList = $this->owner->Slices();
+        }
+
+        $dataList = $dataList->setDataQueryParam(['Versioned.stage' => 'Stage']);
+        
         $fields->addFieldToTab(
             $tabName,
             $grid = new GridField(
                 'Slices',
                 'Slices',
-                $dataList ?: $this->owner->Slices(),
+                $dataList,
                 $gridConfig = GridFieldConfig_RecordEditor::create()
             )
         );
