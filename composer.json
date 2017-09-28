@@ -13,14 +13,25 @@
 			"name": "Stephen Holdaway",
 			"email": "stephen@heyday.co.nz",
 			"role": "Developer"
-		}
+		},
+    {
+      "name": "Ben Dubuisson",
+      "email": "ben.dubuisson@heyday.co.nz",
+      "role": "Developer"
+    }
 	],
 	"require": {
-		"composer/installers": "~1.0",
-		"ajshort/silverstripe-gridfieldextensions": "~1.0",
-		"heyday/silverstripe-dataobjectpreview": "~1.0",
-		"heyday/silverstripe-versioneddataobjects": "~1.0"
+    "silverstripe/framework": "~4.0",
+    "silverstripe/cms": "~4.0",
+		"symbiote/silverstripe-gridfieldextensions": "~3.0"
 	},
+  "prefer-stable": true,
+  "minimum-stability": "dev",
+  "autoload": {
+    "psr-4": {
+      "Heyday\\SilverStripeSlices\\Code\\": "code/"
+    }
+  },
 	"extra": {
 		"branch-alias": {
 			"dev-master": "1.0.x-dev"
