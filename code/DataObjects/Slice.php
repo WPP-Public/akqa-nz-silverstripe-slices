@@ -403,8 +403,8 @@ class Slice extends DataObject
      */
     protected function getTemplateList()
     {
-        $templates = ThemeResourceLoader::instance()->findTemplates(
-            $tryTemplates = $this->getTemplateSearchNames(), Config::inst()->get('SSViewer', 'theme')
+        $templates = ThemeResourceLoader::inst()->findTemplate(
+            $tryTemplates = $this->getTemplateSearchNames(), Config::inst()->get('SilverStripe\View\SSViewer', 'theme')
         );
 
         if (!$templates) {
