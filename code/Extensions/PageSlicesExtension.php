@@ -1,22 +1,34 @@
 <?php
 
+namespace Heyday\SilverStripeSlices\Extensions;
+
+use Heyday\SilverStripeSlices\DataObjects\Slice;
+use Heyday\SilverStripeSlices\Forms\SliceDetailsForm;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\GridField\GridField;
+use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
+use SilverStripe\Forms\GridField\GridFieldDataColumns;
+use SilverStripe\Forms\GridField\GridFieldDeleteAction;
+use SilverStripe\Forms\GridField\GridFieldDetailForm;
+use SilverStripe\ORM\DataExtension;
+
 /**
  * Extension to add slice management to Page
  */
 class PageSlicesExtension extends DataExtension
 {
-    private static $dependencies = array(
-        'previewer' => '%$DataObjectPreviewer'
-    );
+//    private static $dependencies = array(
+//        'previewer' => '%$DataObjectPreviewer'
+//    );
 
-    private static $has_many = array(
-        'Slices' => 'ContentSlice.Parent'
-    );
+    private static $has_many = [
+        'Slices' => Slice::class
+    ];
 
-    /**
-     * @var DataObjectPreviewer
-     */
-    public $previewer;
+//    /**
+//     * @var DataObjectPreviewer
+//     */
+//    public $previewer;
 
     public function updateCMSFields(FieldList $fields)
     {
@@ -35,7 +47,7 @@ class PageSlicesExtension extends DataExtension
         }
 
         $dataList = $dataList->setDataQueryParam(['Versioned.stage' => 'Stage']);
-        
+
         $fields->addFieldToTab(
             $tabName,
             $grid = new GridField(
@@ -46,14 +58,14 @@ class PageSlicesExtension extends DataExtension
             )
         );
 
-        $gridConfig->addComponent(new GridFieldDataObjectPreview($this->previewer));
-        $gridConfig->addComponent(new GridFieldVersionedOrderableRows('Sort'));
-        $gridConfig->removeComponentsByType('GridFieldDeleteAction');
-        $gridConfig->removeComponentsByType('GridFieldDetailForm');
+//        $gridConfig->addComponent(new GridFieldDataObjectPreview($this->previewer));
+//        $gridConfig->addComponent(new GridFieldVersionedOrderableRows('Sort'));
+        $gridConfig->removeComponentsByType(GridFieldDeleteAction::class);
+        $gridConfig->removeComponentsByType(GridFieldDetailForm::class);
         $gridConfig->addComponent(new SliceDetailsForm());
 
         // Change columns displayed
-        $dataColumns = $gridConfig->getComponentByType('GridFieldDataColumns');
+        $dataColumns = $gridConfig->getComponentByType(GridFieldDataColumns::class);
         $dataColumns->setDisplayFields($this->modifyDisplayFields(
             $dataColumns->getDisplayFields($grid)
         ));
