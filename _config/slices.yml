@@ -1,17 +1,14 @@
 ---
 Name: 'slices'
 ---
+# DataObjectPreviewer needs to be updated first :(
+#Injector:
+#  DataObjectPreviewer:
+#    class: DataObjectPreviewer
 
-Injector:
-  DataObjectPreviewer:
-    class: DataObjectPreviewer
 
-Slice:
-  extensions:
-    - 'VersionedDataObject'
+#  dependencies:
+#    previewer: "%$DataObjectPreviewer"
 
-  dependencies:
-    previewer: "%$DataObjectPreviewer"
-
-  previewStylesheets: []
+#  previewStylesheets: []
 
