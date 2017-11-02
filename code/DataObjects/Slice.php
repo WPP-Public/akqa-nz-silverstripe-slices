@@ -2,6 +2,7 @@
 
 namespace Heyday\SilverStripeSlices\DataObjects;
 
+use Caltex\Pages\GenericContentPage;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\ClassInfo;
@@ -36,8 +37,9 @@ class Slice extends DataObject
     );
 
     private static $has_one = array(
-        'Parent' => SiteTree::class
+        'Parent' => GenericContentPage::class
     );
+
 
     private static $default_sort = 'Sort ASC';
 
@@ -366,9 +368,7 @@ class Slice extends DataObject
      */
     protected function getSSViewer()
     {
-        return new SSViewer(
-            $this->getTemplateList()
-        );
+        return new SSViewer($this->getTemplateList());
     }
 
     /**
@@ -403,8 +403,13 @@ class Slice extends DataObject
      */
     protected function getTemplateList()
     {
+        $themes = SSViewer::get_themes();
+        if (($key = array_search('$default', $themes)) !== false) {
+            unset($themes[$key]);
+        }
+        $tryTemplates = $this->getTemplateSearchNames();
         $templates = ThemeResourceLoader::inst()->findTemplate(
-            $tryTemplates = $this->getTemplateSearchNames(), Config::inst()->get('SilverStripe\View\SSViewer', 'theme')
+            $tryTemplates, $themes
         );
 
         if (!$templates) {
@@ -413,7 +418,7 @@ class Slice extends DataObject
             );
         }
 
-        return reset($templates);
+        return [$templates];
     }
 
     /**
