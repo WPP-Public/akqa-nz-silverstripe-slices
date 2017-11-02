@@ -2,6 +2,7 @@
 
 namespace Heyday\SilverStripeSlices\Extensions;
 
+use Caltex\DataObjects\Slices\ContentSlice;
 use Heyday\SilverStripeSlices\DataObjects\Slice;
 use Heyday\SilverStripeSlices\Forms\SliceDetailsForm;
 use SilverStripe\Forms\FieldList;
@@ -11,6 +12,7 @@ use SilverStripe\Forms\GridField\GridFieldDataColumns;
 use SilverStripe\Forms\GridField\GridFieldDeleteAction;
 use SilverStripe\Forms\GridField\GridFieldDetailForm;
 use SilverStripe\ORM\DataExtension;
+use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
 /**
  * Extension to add slice management to Page
@@ -21,9 +23,6 @@ class PageSlicesExtension extends DataExtension
 //        'previewer' => '%$DataObjectPreviewer'
 //    );
 
-    private static $has_many = [
-        'Slices' => Slice::class
-    ];
 
 //    /**
 //     * @var DataObjectPreviewer
@@ -59,16 +58,11 @@ class PageSlicesExtension extends DataExtension
         );
 
 //        $gridConfig->addComponent(new GridFieldDataObjectPreview($this->previewer));
-//        $gridConfig->addComponent(new GridFieldVersionedOrderableRows('Sort'));
+        $gridConfig->addComponent(new GridFieldOrderableRows('Sort'));
         $gridConfig->removeComponentsByType(GridFieldDeleteAction::class);
         $gridConfig->removeComponentsByType(GridFieldDetailForm::class);
         $gridConfig->addComponent(new SliceDetailsForm());
 
-        // Change columns displayed
-        $dataColumns = $gridConfig->getComponentByType(GridFieldDataColumns::class);
-        $dataColumns->setDisplayFields($this->modifyDisplayFields(
-            $dataColumns->getDisplayFields($grid)
-        ));
     }
 
     protected function modifyDisplayFields(array $fields)

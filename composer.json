@@ -1,7 +1,7 @@
 {
 	"name": "heyday/silverstripe-slices",
 	"description": "Provides a Slice extension to DataObject subclasses with custom templates",
-	"type": "silverstripe-module",
+	"type": "silverstripe-vendormodule",
 	"license": "MIT",
 	"authors": [
 		{
@@ -29,7 +29,7 @@
   "minimum-stability": "dev",
   "autoload": {
     "psr-4": {
-      "Heyday\\SilverStripeSlices\\Code\\": "code/"
+      "Heyday\\SilverStripeSlices\\": "code/"
     }
   },
 	"extra": {
