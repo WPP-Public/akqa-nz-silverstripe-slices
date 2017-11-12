@@ -25,7 +25,6 @@ use SilverStripe\View\ThemeResourceLoader;
  */
 class Slice extends DataObject
 {
-
     /**
      * @var array
      */
@@ -403,17 +402,22 @@ class Slice extends DataObject
      */
     protected function getTemplateList()
     {
-        $templates = ThemeResourceLoader::inst()->findTemplate(
-            $tryTemplates = $this->getTemplateSearchNames(), Config::inst()->get('SilverStripe\View\SSViewer', 'theme')
+        $themes = SSViewer::get_themes();
+        if (($key = array_search('$default', $themes)) !== false) {
+            unset($themes[$key]);
+        }
+        $tryTemplates = $this->getTemplateSearchNames();
+        $template = ThemeResourceLoader::inst()->findTemplate(
+            $tryTemplates, $themes
         );
 
-        if (!$templates) {
+        if (!$template) {
             throw new \Exception(
                 'Can\'t find a template from list: "' . implode('", "', $tryTemplates) . '"'
             );
         }
 
-        return reset($templates);
+        return [$template];
     }
 
     /**
