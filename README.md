@@ -1,9 +1,15 @@
 # Content Slices for SilverStripe
 
-Content management in "slices"; separate content components, each with their own template, fields and visual settings that can be created and arranged by a user in the CMS.
+Content management in "slices" configured via YAML; separate content components, each with their own template, fields and visual settings that can be created and arranged by a user in the CMS.
 
-* Slice previews in the CMS
-* Slice CMS configured via YAML
+- [Usage](#usage)
+    - [Templates](#templates)
+    - [Adding Slices to Page](#adding-slices-to-page)
+    - [Subclassing Slice](#subclassing-slice)
+    - [Using Slices on a sub class of a Page/SiteTree](#using-slices-on-a-sub-class-of-a-pagesitetree)
+    - [Customising CMS fields](#customising-cms-fields)
+- [Example config](#example-config)
+- [Compatibility](#compatibility)
 
 ## Usage
 
@@ -19,7 +25,7 @@ Slice:
 
 ### Templates
 
-Each slice type/template has it's own template file with the name `[BaseSliceClass]_[TemplateName]`. These can go in `themes/[theme]/templates/Slices` to separate them from the other templates in your site. 
+Each slice type/template has it's own template file with the name `[BaseSliceClass]_[TemplateName]`. These should go in `themes/[theme]/templates/[MyProject]/DataObjects/Slices` to separate them from the other templates in your site. 
 
 ### Adding Slices to Page
 
@@ -28,7 +34,7 @@ This module comes with an extension for easily setting up Slices on Page:
 ```yaml
 Page:
   extensions:
-    - PageSlicesExtension
+    - Heyday\Extensions\PageSlicesExtension
 ```
 
 In templates, all slices can be rendered using this:
@@ -41,12 +47,17 @@ In templates, all slices can be rendered using this:
 <% end_if %>
 ```
 
-
 ### Subclassing Slice
 
 Subclassing `Slice` is a normal use case, however note that when subclassing it, you'll need to override the method `getBaseSliceClass` method in your "base" slice subclass (the one you point to in a has_many from Page) for the slice to save correctly:
 
 ```php
+<?php
+
+namespace MyProject\DataObjects\Slices;
+
+use Heyday\SilverStripeSlices\DataObjects\Slice;
+
 class ContentSlice extends Slice
 {
     protected function getBaseSliceClass()
@@ -63,7 +74,89 @@ class VideoSlice extends ContentSlice
 
 This is due to the the module needing a "default" class to fall back to when the `className` key has not been set in a template config.
 
-#### Customising CMS fields
+You also need to extends the Extension
+
+```php
+<?php
+
+namespace MyProject\Extensions;
+
+use MyProject\DataObjects\Slices\ContentSlice;
+use Heyday\SilverStripeSlices\Extensions\PageSlicesExtension as BasePageSlicesExtension;
+
+/**
+ * Extension to add slice management to Page
+ */
+class PageSlicesExtension extends BasePageSlicesExtension
+{
+    /**
+     * @var array
+     */
+    private static $has_many = [
+        // update the relation with your sub class
+        'Slices' => ContentSlice::class
+    ];
+}
+```
+
+And update the configuration accordingly.
+
+```yaml
+Page:
+  extensions:
+    - MyProject\Extensions\PageSlicesExtension
+```
+
+### Using Slices on a sub class of a Page/SiteTree
+
+In case you want to use the slices on a custom page type, you will also need to override the **has_one** relation to match your sub class.
+
+Let's say you have a custom page type named GenericPage.
+
+```php
+<?php
+
+namespace MyProject\Pages;
+
+use SilverStripe\CMS\Model\SiteTree;
+
+/**
+ * Class GenericPage
+ */
+class GenericPage extends SiteTree
+{
+    // ...
+```
+
+You need to add the following Extension:
+
+```php
+<?php
+
+namespace MyProject\Extensions;
+
+use MyProject\Pages\GenericPage;
+use SilverStripe\ORM\DataExtension;
+
+/**
+ * Extension to change the parent of a slice
+ */
+class SliceExtension extends DataExtension
+{
+    private static $has_one = array(
+        'Parent' => GenericPage::class
+    );
+}
+```
+
+Then udpate the configuration:
+```yml
+Heyday\SilverStripeSlices\DataObjects\Slice:
+  extensions:
+    - Caltex\Extensions\SliceExtension
+```
+
+### Customising CMS fields
 
 Adding and modifying fields in `YourBaseSlice::getCMSFields` is an expected use case. Note that things configured in the slices YAML configuration will be overriden if, for example, you replace a field with something custom. In this case, you can re-apply the slices config with the following at the end of your `getCMSFields` function:
 
@@ -73,13 +166,7 @@ $config = $this->getCurrentTemplateConfig();
 $this->configureFieldsFromConfig($fields, $config);
 ```
 
-#### Customising slice previews in the CMS
-
-![Slice preview in CMS](docs/images/dataobject-preview-slice.png)
-
-A preview of a slice renders the CMS in an iframe when editing and browsing. Out of the box, previews are rendered inside a basic HTML page wrapper: `silverstripe-slices/templates/SliceWrapper.ss`. You can override this wrapper in your own theme to customise how slice previews are delivered.
-
-### Example config
+## Example config
 
 ```yaml
 Slice:
@@ -132,7 +219,7 @@ Slice:
 
       # Class to change to when using this template
       # This allows complex slices to have extra fields and code
-      className: TwoColumnImageSlice
+      className: MyProject\DataObjects\Slices\TwoColumnImageSlice
 
       # Fields that only need a label configured can be defined using a shortcut:
       # (The order fields are defined here also controls the order they show in the CMS)
