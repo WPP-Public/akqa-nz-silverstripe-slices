@@ -1,14 +1,5 @@
 ---
 Name: 'slices'
 ---
-# DataObjectPreviewer needs to be updated first :(
-#Injector:
-#  DataObjectPreviewer:
-#    class: DataObjectPreviewer
 
-
-#  dependencies:
-#    previewer: "%$DataObjectPreviewer"
-
-#  previewStylesheets: []
 
