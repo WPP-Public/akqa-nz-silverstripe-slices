@@ -17,18 +17,9 @@ use SilverStripe\ORM\DataExtension;
  */
 class PageSlicesExtension extends DataExtension
 {
-//    private static $dependencies = array(
-//        'previewer' => '%$DataObjectPreviewer'
-//    );
-
     private static $has_many = [
         'Slices' => Slice::class
     ];
-
-//    /**
-//     * @var DataObjectPreviewer
-//     */
-//    public $previewer;
 
     public function updateCMSFields(FieldList $fields)
     {
@@ -58,8 +49,6 @@ class PageSlicesExtension extends DataExtension
             )
         );
 
-//        $gridConfig->addComponent(new GridFieldDataObjectPreview($this->previewer));
-//        $gridConfig->addComponent(new GridFieldVersionedOrderableRows('Sort'));
         $gridConfig->removeComponentsByType(GridFieldDeleteAction::class);
         $gridConfig->removeComponentsByType(GridFieldDetailForm::class);
         $gridConfig->addComponent(new SliceDetailsForm());

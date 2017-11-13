@@ -189,24 +189,6 @@ class Slice extends DataObject
         $tab = $fields->findOrMakeTab('Root.Main');
         $firstField = $tab->getChildren()->first() ? $tab->getChildren()->first()->getName() : null;
 
-        // Add the slice preview at the top of the tab TODO update DataObjectPreviewer package
-//        try {
-//            $this->getTemplateList();
-//            $fields->addFieldToTab(
-//                'Root.Main',
-//                new DataObjectPreviewField(
-//                    'Slice',
-//                    $this,
-//                    $this->previewer
-//                ),
-//                $firstField
-//            );
-//        } catch (Exception $e) {
-//            $fields->addFieldToTab('Root.Main', new LiteralField('Slice',
-//                '<div class="message error"><strong>Unable to render slice preview:</strong> ' . htmlentities($e->getMessage()) . '</div>'
-//            ), $firstField);
-//        }
-
         // Template selection
         $fields->addFieldToTab(
             'Root.Main',
@@ -332,16 +314,6 @@ class Slice extends DataObject
         Config::inst()->update('SSViewer', 'theme_enabled', $themeEnabled);
 
         return $result;
-    }
-
-    /**
-     * Used in templates to get a iframe preview of the slice
-     *
-     * @return string
-     */
-    public function getPreview()
-    {
-        return $this->previewer->preview($this);
     }
 
     /**
