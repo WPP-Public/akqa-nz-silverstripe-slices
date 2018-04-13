@@ -238,4 +238,4 @@ Slice:
 
 ## Compatibility
 
-This module requires at least SilverStripe 3.1 and PHP 5.3.
+This module requires at least SilverStripe 4 and PHP 5.6.
