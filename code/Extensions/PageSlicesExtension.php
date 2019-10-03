@@ -35,7 +35,7 @@ class PageSlicesExtension extends DataExtension
         }
 
         $dataList = $dataList->setDataQueryParam(['Versioned.stage' => 'Stage']);
-        
+
         $fields->addFieldToTab(
             $tabName,
             $grid = new GridField(
@@ -47,7 +47,8 @@ class PageSlicesExtension extends DataExtension
         );
 
         $gridConfig->addComponent(new GridFieldDataObjectPreview($this->previewer));
-        $gridConfig->addComponent(new GridFieldVersionedOrderableRows('Sort'));
+        //@TODO: add new sorter!!!
+        // $gridConfig->addComponent(new GridFieldVersionedOrderableRows('Sort'));
         $gridConfig->removeComponentsByType('GridFieldDeleteAction');
         $gridConfig->removeComponentsByType('GridFieldDetailForm');
         $gridConfig->addComponent(new SliceDetailsForm());

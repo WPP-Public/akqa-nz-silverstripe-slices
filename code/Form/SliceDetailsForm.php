@@ -1,5 +1,5 @@
 <?php
 
-class SliceDetailsForm extends VersionedDataObjectDetailsForm
+class SliceDetailsForm extends GridFieldDetailForm
 {
 }

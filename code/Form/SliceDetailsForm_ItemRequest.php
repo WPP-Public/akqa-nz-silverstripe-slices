@@ -13,7 +13,7 @@
  * are compatible. Object::config() uses get_called_class(), which makes it return the config for
  * the old class if the instance is not recreated, causing non-sense looking errors.
  */
-class SliceDetailsForm_ItemRequest extends VersionedDataObjectDetailsForm_ItemRequest
+class SliceDetailsForm_ItemRequest extends GridFieldDetailForm_ItemRequest
 {
     public function __construct($gridField, $component, $record, $requestHandler, $popupFormName)
     {
