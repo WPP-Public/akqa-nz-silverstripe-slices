@@ -1,5 +1,15 @@
 <?php
 
+namespace Heyday\Slices\Extensions;
+
+use DataExtension;
+use FieldList;
+use GridField;
+use GridFieldConfig_RecordEditor;
+use GridFieldDataObjectPreview;
+use SliceDetailsForm;
+
+
 /**
  * Extension to add slice management to Page
  */

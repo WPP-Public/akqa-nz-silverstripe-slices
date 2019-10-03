@@ -1,0 +1,6 @@
+mappings:
+  SiteTreePermissionsExtension: Heyday\Slices\Extensions\SiteTreePermissionsExtension
+  PageSlicesExtension: Heyday\Slices\Extensions\PageSlicesExtension
+  SliceDetailsForm_ItemRequest: Heyday\Slices\Form\SliceDetailsForm_ItemRequest
+  SliceDetailsForm: Heyday\Slices\Form\SliceDetailsForm
+  Slice: Heyday\Slices\DataObjects\Slice

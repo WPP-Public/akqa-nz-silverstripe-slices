@@ -1,5 +1,25 @@
 <?php
 
+namespace Heyday\Slices\DataObjects;
+
+use DataObject;
+use ClassInfo;
+use RuntimeException;
+use FieldList;
+use FormField;
+use DataObjectPreviewField;
+use Exception;
+use LiteralField;
+use DropdownField;
+use ListboxField;
+use FileField;
+use Requirements;
+use Config;
+use SSViewer;
+use SS_TemplateLoader;
+use Director;
+
+
 class Slice extends DataObject
 {
     private static $dependencies = array(

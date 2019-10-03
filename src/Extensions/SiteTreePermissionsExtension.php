@@ -1,5 +1,12 @@
 <?php
 
+namespace Heyday\Slices\Extensions;
+
+use DataExtension;
+use Member;
+use Permission;
+
+
 /**
  * Apply the SiteTree edit/view/delete permissions/roles to any DataObject
  *

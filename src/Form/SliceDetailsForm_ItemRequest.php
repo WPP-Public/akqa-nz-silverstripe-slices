@@ -1,5 +1,12 @@
 <?php
 
+namespace Heyday\Slices\Form;
+
+use GridFieldDetailForm_ItemRequest;
+use Slice;
+use RuntimeException;
+
+
 
 /**
  * Slice GridField Details Form
