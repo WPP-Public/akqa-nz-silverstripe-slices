@@ -5,9 +5,18 @@
  *
  * By default DataObjects are only writable by admin users, which isn't all that useful.
  */
+
+/**
+  * ### @@@@ START REPLACEMENT @@@@ ###
+  * WHY: upgrade to SS4
+  * OLD:  extends DataExtension (ignore case)
+  * NEW:  extends DataExtension (COMPLEX)
+  * EXP: Check for use of $this->anyVar and replace with $this->anyVar[$this->owner->ID] or consider turning the class into a trait
+  * ### @@@@ STOP REPLACEMENT @@@@ ###
+  */
 class SiteTreePermissionsExtension extends DataExtension
 {
-    public function canView($member = null)
+    public function canView($member = null, $context = [])
     {
         if(!$member instanceof Member) {
             $member = Member::currentUser();
@@ -20,12 +29,12 @@ class SiteTreePermissionsExtension extends DataExtension
         return $this->owner->canView($member);
     }
 
-    public function canCreate($member = null)
+    public function canCreate($member = null, $context = [])
     {
         return $this->owner->canEdit($member);
     }
 
-    public function canEdit($member = null)
+    public function canEdit($member = null, $context = [])
     {
         if(!$member instanceof Member) {
             $member = Member::currentUser();
@@ -38,7 +47,7 @@ class SiteTreePermissionsExtension extends DataExtension
         return $this->owner->canEdit($member);
     }
 
-    public function canDelete($member = null)
+    public function canDelete($member = null, $context = [])
     {
         if(!$member instanceof Member) {
             $member = Member::currentUser();

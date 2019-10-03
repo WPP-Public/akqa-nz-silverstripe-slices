@@ -20,12 +20,30 @@ class Slice extends DataObject
     
     private static $table_name = 'Slice';
 
+
+/**
+  * ### @@@@ START REPLACEMENT @@@@ ###
+  * WHY: upgrade to SS4
+  * OLD: private static $db = (case sensitive)
+  * NEW: private static $db = (COMPLEX)
+  * EXP: Make sure to add a private static $table_name!
+  * ### @@@@ STOP REPLACEMENT @@@@ ###
+  */
     private static $db = array(
         'Template' => 'Varchar(255)',
         'VisualOptions' => 'Varchar(255)',
         'Sort' => 'Int',
     );
 
+
+/**
+  * ### @@@@ START REPLACEMENT @@@@ ###
+  * WHY: upgrade to SS4
+  * OLD: private static $has_one = (case sensitive)
+  * NEW: private static $has_one = (COMPLEX)
+  * EXP: Make sure to add a private static $table_name!
+  * ### @@@@ STOP REPLACEMENT @@@@ ###
+  */
     private static $has_one = array(
         'Parent' => 'Page'
     );
@@ -129,7 +147,25 @@ class Slice extends DataObject
     {
         $this->modifyFieldWithSetting($fields, $config, 'fieldClass',
             function(FormField $field, array $config) use ($fields) {
+
+/**
+  * ### @@@@ START REPLACEMENT @@@@ ###
+  * WHY: upgrade to SS4
+  * OLD: $className (case sensitive)
+  * NEW: $className (COMPLEX)
+  * EXP: Check if the class name can still be used as such
+  * ### @@@@ STOP REPLACEMENT @@@@ ###
+  */
                 $className = $config['fieldClass'];
+
+/**
+  * ### @@@@ START REPLACEMENT @@@@ ###
+  * WHY: upgrade to SS4
+  * OLD: $className (case sensitive)
+  * NEW: $className (COMPLEX)
+  * EXP: Check if the class name can still be used as such
+  * ### @@@@ STOP REPLACEMENT @@@@ ###
+  */
                 $fields->replaceField($field->getName(), $className::create($field->getName()));
             }
         );
@@ -239,7 +275,7 @@ class Slice extends DataObject
     public function getTemplateNames()
     {
         $templates = $this->config()->templates;
-        $map = array();
+        $map = [];
 
         foreach ($templates as $name => $config) {
             if (isset($config['name'])) {
@@ -305,16 +341,25 @@ class Slice extends DataObject
 
         // The theme can be disabled when in the context of the CMS, which causes includes to fail
         $themeEnabled = Config::inst()->get('SSViewer', 'theme_enabled');
-        Config::inst()->update('SSViewer', 'theme_enabled', true);
+        Config::modify()->update('SSViewer', 'theme_enabled', true);
 
         $result = $this->customise(array(
             'Slice' => $this->forTemplate()
-        ))->renderWith('SliceWrapper');
+
+/**
+  * ### @@@@ START REPLACEMENT @@@@ ###
+  * WHY: upgrade to SS4
+  * OLD: ->RenderWith( (ignore case)
+  * NEW: ->RenderWith( (COMPLEX)
+  * EXP: Check that the template location is still valid!
+  * ### @@@@ STOP REPLACEMENT @@@@ ###
+  */
+        ))->RenderWith('SliceWrapper');
 
         Requirements::restore();
 
         // Restore previous theme_enabled setting
-        Config::inst()->update('SSViewer', 'theme_enabled', $themeEnabled);
+        Config::modify()->update('SSViewer', 'theme_enabled', $themeEnabled);
 
         return $result;
     }
@@ -336,7 +381,16 @@ class Slice extends DataObject
      */
     public function forTemplate()
     {
-        return $this->renderWith(
+
+/**
+  * ### @@@@ START REPLACEMENT @@@@ ###
+  * WHY: upgrade to SS4
+  * OLD: ->RenderWith( (ignore case)
+  * NEW: ->RenderWith( (COMPLEX)
+  * EXP: Check that the template location is still valid!
+  * ### @@@@ STOP REPLACEMENT @@@@ ###
+  */
+        return $this->RenderWith(
             $this->getSSViewer(),
             null
         );
@@ -407,7 +461,7 @@ class Slice extends DataObject
      */
     protected function getTemplateSearchNames()
     {
-        $templates = array();
+        $templates = [];
         $prefix = $this->getTemplateClass();
 
         $templates[] = $prefix . '_' . ($this->Template ?: $this->getDefaultTemplate());
