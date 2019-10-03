@@ -16,9 +16,21 @@
         }
     ],
     "require": {
-        "composer/installers": "~1.0",
         "symbiote/silverstripe-gridfieldextensions": "*",
-        "sunnysideup/dataobjectpreview": "dev-master"
+        "sunnysideup/dataobjectpreview": "dev-master",
+        "silverstripe/framework": "~4@stable",
+        "silverstripe/assets": "*",
+        "silverstripe/config": "*",
+        "silverstripe/admin": "*",
+        "silverstripe/cms": "*",
+        "silverstripe/asset-admin": "*",
+        "silverstripe/campaign-admin": "*",
+        "silverstripe/versioned-admin": "*",
+        "silverstripe/errorpage": "*",
+        "silverstripe/graphql": "*",
+        "silverstripe/reports": "*",
+        "silverstripe/siteconfig": "*",
+        "silverstripe/versioned": "*"
     },
     "extra": {
         "branch-alias": {
