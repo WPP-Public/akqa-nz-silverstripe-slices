@@ -2,7 +2,9 @@
 
 namespace Heyday\Slices\Form;
 
-use GridFieldDetailForm;
+
+use SilverStripe\Forms\GridField\GridFieldDetailForm;
+
 
 
 class SliceDetailsForm extends GridFieldDetailForm

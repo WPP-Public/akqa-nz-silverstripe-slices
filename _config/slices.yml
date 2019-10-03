@@ -1,14 +1,8 @@
 ---
 Name: 'slices'
 ---
-
-Injector:
-  DataObjectPreviewer:
-    class: DataObjectPreviewer
-
-Slice:
-
+SilverStripe\Core\Injector\Injector: {  }
+Heyday\Slices\DataObjects\Slice:
   dependencies:
-    previewer: "%$DataObjectPreviewer"
-
-  previewStylesheets: []
+    previewer: '%$DataObjectPreviewer'
+  previewStylesheets: {  }

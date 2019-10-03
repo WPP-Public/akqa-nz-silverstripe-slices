@@ -2,9 +2,12 @@
 
 namespace Heyday\Slices\Form;
 
-use GridFieldDetailForm_ItemRequest;
-use Slice;
+
+
 use RuntimeException;
+use Heyday\Slices\DataObjects\Slice;
+use SilverStripe\Forms\GridField\GridFieldDetailForm_ItemRequest;
+
 
 
 

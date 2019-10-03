@@ -2,9 +2,13 @@
 
 namespace Heyday\Slices\Extensions;
 
-use DataExtension;
-use Member;
-use Permission;
+
+
+
+use SilverStripe\Security\Member;
+use SilverStripe\Security\Permission;
+use SilverStripe\ORM\DataExtension;
+
 
 
 /**

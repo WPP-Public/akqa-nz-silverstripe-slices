@@ -2,12 +2,21 @@
 
 namespace Heyday\Slices\Extensions;
 
-use DataExtension;
-use FieldList;
-use GridField;
-use GridFieldConfig_RecordEditor;
+
+
+
+
 use GridFieldDataObjectPreview;
-use SliceDetailsForm;
+
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
+use SilverStripe\Forms\GridField\GridField;
+use SilverStripe\Forms\GridField\GridFieldDeleteAction;
+use SilverStripe\Forms\GridField\GridFieldDetailForm;
+use Heyday\Slices\Form\SliceDetailsForm;
+use SilverStripe\Forms\GridField\GridFieldDataColumns;
+use SilverStripe\ORM\DataExtension;
+
 
 
 /**
@@ -68,12 +77,12 @@ class PageSlicesExtension extends DataExtension
         $gridConfig->addComponent(new GridFieldDataObjectPreview($this->previewer));
         //@TODO: add new sorter!!!
         // $gridConfig->addComponent(new GridFieldVersionedOrderableRows('Sort'));
-        $gridConfig->removeComponentsByType('GridFieldDeleteAction');
-        $gridConfig->removeComponentsByType('GridFieldDetailForm');
+        $gridConfig->removeComponentsByType(GridFieldDeleteAction::class);
+        $gridConfig->removeComponentsByType(GridFieldDetailForm::class);
         $gridConfig->addComponent(new SliceDetailsForm());
 
         // Change columns displayed
-        $dataColumns = $gridConfig->getComponentByType('GridFieldDataColumns');
+        $dataColumns = $gridConfig->getComponentByType(GridFieldDataColumns::class);
         $dataColumns->setDisplayFields($this->modifyDisplayFields(
             $dataColumns->getDisplayFields($grid)
         ));

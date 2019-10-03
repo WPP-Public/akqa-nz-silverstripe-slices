@@ -2,22 +2,36 @@
 
 namespace Heyday\Slices\DataObjects;
 
-use DataObject;
-use ClassInfo;
+
+
 use RuntimeException;
-use FieldList;
-use FormField;
+
+
 use DataObjectPreviewField;
 use Exception;
-use LiteralField;
-use DropdownField;
-use ListboxField;
-use FileField;
-use Requirements;
-use Config;
-use SSViewer;
+
+
+
+
+
+
+
 use SS_TemplateLoader;
-use Director;
+
+use SilverStripe\Core\ClassInfo;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\FormField;
+use Heyday\Slices\DataObjects\Slice;
+use SilverStripe\Forms\LiteralField;
+use SilverStripe\Forms\DropdownField;
+use SilverStripe\Forms\ListboxField;
+use SilverStripe\Forms\FileField;
+use SilverStripe\View\Requirements;
+use SilverStripe\Core\Config\Config;
+use SilverStripe\View\SSViewer;
+use SilverStripe\Control\Director;
+use SilverStripe\ORM\DataObject;
+
 
 
 class Slice extends DataObject
@@ -236,14 +250,14 @@ class Slice extends DataObject
             $fields->addFieldToTab(
                 'Root.Main',
                 new DataObjectPreviewField(
-                    'Slice',
+                    Slice::class,
                     $this,
                     $this->previewer
                 ),
                 $firstField
             );
         } catch (Exception $e) {
-            $fields->addFieldToTab('Root.Main', new LiteralField('Slice',
+            $fields->addFieldToTab('Root.Main', new LiteralField(Slice::class,
                 '<div class="message error"><strong>Unable to render slice preview:</strong> '.htmlentities($e->getMessage()).'</div>'
             ), $firstField);
         }
@@ -360,8 +374,8 @@ class Slice extends DataObject
         }
 
         // The theme can be disabled when in the context of the CMS, which causes includes to fail
-        $themeEnabled = Config::inst()->get('SSViewer', 'theme_enabled');
-        Config::modify()->update('SSViewer', 'theme_enabled', true);
+        $themeEnabled = Config::inst()->get(SSViewer::class, 'theme_enabled');
+        Config::modify()->update(SSViewer::class, 'theme_enabled', true);
 
         $result = $this->customise(array(
             'Slice' => $this->forTemplate()
@@ -379,7 +393,7 @@ class Slice extends DataObject
         Requirements::restore();
 
         // Restore previous theme_enabled setting
-        Config::modify()->update('SSViewer', 'theme_enabled', $themeEnabled);
+        Config::modify()->update(SSViewer::class, 'theme_enabled', $themeEnabled);
 
         return $result;
     }
@@ -462,7 +476,7 @@ class Slice extends DataObject
     protected function getTemplateList()
     {
         $templates = SS_TemplateLoader::instance()->findTemplates(
-            $tryTemplates = $this->getTemplateSearchNames(), Config::inst()->get('SSViewer', 'theme')
+            $tryTemplates = $this->getTemplateSearchNames(), Config::inst()->get(SSViewer::class, 'theme')
         );
 
         if (!$templates) {
