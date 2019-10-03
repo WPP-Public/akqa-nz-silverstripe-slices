@@ -2,14 +2,9 @@
 
 namespace Heyday\Slices\Extensions;
 
-
-
-
+use SilverStripe\ORM\DataExtension;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
-use SilverStripe\ORM\DataExtension;
-
-
 
 /**
  * Apply the SiteTree edit/view/delete permissions/roles to any DataObject
@@ -18,18 +13,18 @@ use SilverStripe\ORM\DataExtension;
  */
 
 /**
-  * ### @@@@ START REPLACEMENT @@@@ ###
-  * WHY: upgrade to SS4
-  * OLD:  extends DataExtension (ignore case)
-  * NEW:  extends DataExtension (COMPLEX)
-  * EXP: Check for use of $this->anyVar and replace with $this->anyVar[$this->owner->ID] or consider turning the class into a trait
-  * ### @@@@ STOP REPLACEMENT @@@@ ###
-  */
+ * ### @@@@ START REPLACEMENT @@@@ ###
+ * WHY: upgrade to SS4
+ * OLD:  extends DataExtension (ignore case)
+ * NEW:  extends DataExtension (COMPLEX)
+ * EXP: Check for use of $this->anyVar and replace with $this->anyVar[$this->owner->ID] or consider turning the class into a trait
+ * ### @@@@ STOP REPLACEMENT @@@@ ###
+ */
 class SiteTreePermissionsExtension extends DataExtension
 {
     public function canView($member = null, $context = [])
     {
-        if(!$member instanceof Member) {
+        if (! $member instanceof Member) {
             $member = Member::currentUser();
         }
 
@@ -47,7 +42,7 @@ class SiteTreePermissionsExtension extends DataExtension
 
     public function canEdit($member = null, $context = [])
     {
-        if(!$member instanceof Member) {
+        if (! $member instanceof Member) {
             $member = Member::currentUser();
         }
 
@@ -60,7 +55,7 @@ class SiteTreePermissionsExtension extends DataExtension
 
     public function canDelete($member = null, $context = [])
     {
-        if(!$member instanceof Member) {
+        if (! $member instanceof Member) {
             $member = Member::currentUser();
         }
 

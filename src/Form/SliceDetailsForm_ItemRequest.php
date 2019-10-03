@@ -2,14 +2,9 @@
 
 namespace Heyday\Slices\Form;
 
-
-
-use RuntimeException;
 use Heyday\Slices\DataObjects\Slice;
+use RuntimeException;
 use SilverStripe\Forms\GridField\GridFieldDetailForm_ItemRequest;
-
-
-
 
 /**
  * Slice GridField Details Form
@@ -29,7 +24,7 @@ class SliceDetailsForm_ItemRequest extends GridFieldDetailForm_ItemRequest
     {
         parent::__construct($gridField, $component, $record, $requestHandler, $popupFormName);
 
-        if (!$this->record instanceof Slice) {
+        if (! $this->record instanceof Slice) {
             throw new RuntimeException('SliceDetailsForm expects to work with instances of Slice. Was given a ' . get_class($this->record));
         }
     }

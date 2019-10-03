@@ -2,49 +2,43 @@
 
 namespace Heyday\Slices\Extensions;
 
-
-
-
-
 use GridFieldDataObjectPreview;
 
+use Heyday\Slices\Form\SliceDetailsForm;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
 use SilverStripe\Forms\GridField\GridField;
+use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
+use SilverStripe\Forms\GridField\GridFieldDataColumns;
 use SilverStripe\Forms\GridField\GridFieldDeleteAction;
 use SilverStripe\Forms\GridField\GridFieldDetailForm;
-use Heyday\Slices\Form\SliceDetailsForm;
-use SilverStripe\Forms\GridField\GridFieldDataColumns;
 use SilverStripe\ORM\DataExtension;
-
-
 
 /**
  * Extension to add slice management to Page
  */
 
 /**
-  * ### @@@@ START REPLACEMENT @@@@ ###
-  * WHY: upgrade to SS4
-  * OLD:  extends DataExtension (ignore case)
-  * NEW:  extends DataExtension (COMPLEX)
-  * EXP: Check for use of $this->anyVar and replace with $this->anyVar[$this->owner->ID] or consider turning the class into a trait
-  * ### @@@@ STOP REPLACEMENT @@@@ ###
-  */
+ * ### @@@@ START REPLACEMENT @@@@ ###
+ * WHY: upgrade to SS4
+ * OLD:  extends DataExtension (ignore case)
+ * NEW:  extends DataExtension (COMPLEX)
+ * EXP: Check for use of $this->anyVar and replace with $this->anyVar[$this->owner->ID] or consider turning the class into a trait
+ * ### @@@@ STOP REPLACEMENT @@@@ ###
+ */
 class PageSlicesExtension extends DataExtension
 {
-    private static $dependencies = array(
-        'previewer' => '%$DataObjectPreviewer'
-    );
-
-    private static $has_many = array(
-        'Slices' => 'ContentSlice.Parent'
-    );
-
     /**
      * @var DataObjectPreviewer
      */
     public $previewer;
+
+    private static $dependencies = [
+        'previewer' => '%$DataObjectPreviewer',
+    ];
+
+    private static $has_many = [
+        'Slices' => 'ContentSlice.Parent',
+    ];
 
     public function updateCMSFields(FieldList $fields)
     {
@@ -58,7 +52,7 @@ class PageSlicesExtension extends DataExtension
      */
     public function addSlicesCmsTab(FieldList $fields, $tabName = 'Root.Slices', $dataList = null)
     {
-        if (!$dataList) {
+        if (! $dataList) {
             $dataList = $this->owner->Slices();
         }
 

@@ -2,92 +2,81 @@
 
 namespace Heyday\Slices\DataObjects;
 
+use DataObjectPreviewField;
 
 
+use Exception;
 use RuntimeException;
 
 
-use DataObjectPreviewField;
-use Exception;
 
 
 
 
 
-
-
-use SS_TemplateLoader;
+use SilverStripe\Control\Director;
 
 use SilverStripe\Core\ClassInfo;
-use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\FormField;
-use Heyday\Slices\DataObjects\Slice;
-use SilverStripe\Forms\LiteralField;
-use SilverStripe\Forms\DropdownField;
-use SilverStripe\Forms\ListboxField;
-use SilverStripe\Forms\FileField;
-use SilverStripe\View\Requirements;
 use SilverStripe\Core\Config\Config;
-use SilverStripe\View\SSViewer;
-use SilverStripe\Control\Director;
+use SilverStripe\Forms\DropdownField;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\FileField;
+use SilverStripe\Forms\FormField;
+use SilverStripe\Forms\ListboxField;
+use SilverStripe\Forms\LiteralField;
 use SilverStripe\ORM\DataObject;
-
-
+use SilverStripe\View\Requirements;
+use SilverStripe\View\SSViewer;
+use SS_TemplateLoader;
 
 class Slice extends DataObject
 {
-    private static $dependencies = array(
-        'previewer' => '%$DataObjectPreviewer'
-    );
-
-
-/**
-  * ### @@@@ START REPLACEMENT @@@@ ###
-  * OLD: private static $db (case sensitive)
-  * NEW: 
-    private static $table_name = '[SEARCH_REPLACE_CLASS_NAME_GOES_HERE]';
-
-    private static $db (COMPLEX)
-  * EXP: Check that is class indeed extends DataObject and that it is not a data-extension!
-  * ### @@@@ STOP REPLACEMENT @@@@ ###
-  */
-    
-    private static $table_name = 'Slice';
-
-
-/**
-  * ### @@@@ START REPLACEMENT @@@@ ###
-  * WHY: upgrade to SS4
-  * OLD: private static $db = (case sensitive)
-  * NEW: private static $db = (COMPLEX)
-  * EXP: Make sure to add a private static $table_name!
-  * ### @@@@ STOP REPLACEMENT @@@@ ###
-  */
-    private static $db = array(
-        'Template' => 'Varchar(255)',
-        'VisualOptions' => 'Varchar(255)',
-        'Sort' => 'Int',
-    );
-
-
-/**
-  * ### @@@@ START REPLACEMENT @@@@ ###
-  * WHY: upgrade to SS4
-  * OLD: private static $has_one = (case sensitive)
-  * NEW: private static $has_one = (COMPLEX)
-  * EXP: Make sure to add a private static $table_name!
-  * ### @@@@ STOP REPLACEMENT @@@@ ###
-  */
-    private static $has_one = array(
-        'Parent' => 'Page'
-    );
-
-    private static $default_sort = 'Sort ASC';
-
     /**
      * @var DataObjectPreviewer
      */
     public $previewer;
+
+    private static $dependencies = [
+        'previewer' => '%$DataObjectPreviewer',
+    ];
+
+    /**
+     * ### @@@@ START REPLACEMENT @@@@ ###
+     * OLD: private static $db (case sensitive)
+     * NEW:
+    private static $db (COMPLEX)
+     * EXP: Check that is class indeed extends DataObject and that it is not a data-extension!
+     * ### @@@@ STOP REPLACEMENT @@@@ ###
+     */
+    private static $table_name = 'Slice';
+
+    /**
+     * ### @@@@ START REPLACEMENT @@@@ ###
+     * WHY: upgrade to SS4
+     * OLD: private static $db = (case sensitive)
+     * NEW: private static $db = (COMPLEX)
+     * EXP: Make sure to add a private static $table_name!
+     * ### @@@@ STOP REPLACEMENT @@@@ ###
+     */
+    private static $db = [
+        'Template' => 'Varchar(255)',
+        'VisualOptions' => 'Varchar(255)',
+        'Sort' => 'Int',
+    ];
+
+    /**
+     * ### @@@@ START REPLACEMENT @@@@ ###
+     * WHY: upgrade to SS4
+     * OLD: private static $has_one = (case sensitive)
+     * NEW: private static $has_one = (COMPLEX)
+     * EXP: Make sure to add a private static $table_name!
+     * ### @@@@ STOP REPLACEMENT @@@@ ###
+     */
+    private static $has_one = [
+        'Parent' => 'Page',
+    ];
+
+    private static $default_sort = 'Sort ASC';
 
     /**
      * @return FieldList
@@ -138,16 +127,16 @@ class Slice extends DataObject
         $config = $this->getTemplateConfig($templateName);
 
         if (isset($config['className'])) {
-            if (!ClassInfo::exists($config['className'])) {
+            if (! ClassInfo::exists($config['className'])) {
                 throw new RuntimeException("Cannot change {$this->getBaseSliceClass()} be the non-existent class '{$config['className']}'");
             }
 
             $this->setClassName($config['className']);
 
             // Prevent an error occurring when changing the class of an object that hasn't been saved yet
-            if($this->unsavedRelations) {
-                foreach($this->unsavedRelations as $name => $list) {
-                    if(!$this->hasMethod($name)) {
+            if ($this->unsavedRelations) {
+                foreach ($this->unsavedRelations as $name => $list) {
+                    if (! $this->hasMethod($name)) {
                         unset($this->unsavedRelations[$name]);
                     }
                 }
@@ -155,6 +144,136 @@ class Slice extends DataObject
         } else {
             $this->setClassName($this->getBaseSliceClass());
         }
+    }
+
+    /**
+     * Get a map of template types to human-readable names
+     *
+     * If the `name` key is not configured for a template, the template identifier will be split into words
+     *
+     * @return string[]
+     */
+    public function getTemplateNames()
+    {
+        $templates = $this->config()->templates;
+        $map = [];
+
+        foreach ($templates as $name => $config) {
+            if (isset($config['name'])) {
+                $map[$name] = $config['name'];
+            } else {
+                $map[$name] = $this->convertCamelCaseToWords($name);
+            }
+        }
+
+        return $map;
+    }
+
+    /**
+     * Get the template config name to be selected by default for new slices
+     *
+     * @return string
+     */
+    public function getDefaultTemplate()
+    {
+        if ($this->config()->defaultTemplate) {
+            return $this->config()->defaultTemplate;
+        }
+        $identifiers = array_keys($this->config()->templates ?: []);
+        return reset($identifiers);
+    }
+
+    /**
+     * Check if there is a visual option matching the name specified
+     *
+     * Used from templates like <% if $hasLayoutOption('underline') %><% end_if %>
+     *
+     * @param string $name
+     * @return bool
+     */
+    public function hasLayoutOption($name)
+    {
+        return isset($this->record['VisualOptions']) && in_array(
+            $name,
+            explode(
+                ',',
+                $this->record['VisualOptions']
+            ), true
+        );
+    }
+
+    /**
+     * Returns a rendered state to use with the dataobject preview field
+     *
+     * @return string
+     */
+    public function getPreviewHtml()
+    {
+        Requirements::clear();
+
+        $previewStylesheets = $this->config()->previewStylesheets;
+
+        if (is_array($previewStylesheets)) {
+            foreach ($previewStylesheets as $css) {
+                Requirements::css($css);
+            }
+        }
+
+        // The theme can be disabled when in the context of the CMS, which causes includes to fail
+        $themeEnabled = Config::inst()->get(SSViewer::class, 'theme_enabled');
+        Config::modify()->update(SSViewer::class, 'theme_enabled', true);
+
+        $result = $this->customise([
+            'Slice' => $this->forTemplate(),
+
+            /**
+         * ### @@@@ START REPLACEMENT @@@@ ###
+         * WHY: upgrade to SS4
+         * OLD: ->RenderWith( (ignore case)
+         * NEW: ->RenderWith( (COMPLEX)
+         * EXP: Check that the template location is still valid!
+         * ### @@@@ STOP REPLACEMENT @@@@ ###
+         */
+        ])->RenderWith('SliceWrapper');
+
+        Requirements::restore();
+
+        // Restore previous theme_enabled setting
+        Config::modify()->update(SSViewer::class, 'theme_enabled', $themeEnabled);
+
+        return $result;
+    }
+
+    /**
+     * Used in templates to get a iframe preview of the slice
+     *
+     * @return string
+     */
+    public function getPreview()
+    {
+        return $this->previewer->preview($this);
+    }
+
+    /**
+     * Render the slice
+     *
+     * @return HTMLText
+     */
+    public function forTemplate()
+    {
+
+        /**
+         * ### @@@@ START REPLACEMENT @@@@ ###
+         * WHY: upgrade to SS4
+         * OLD: ->RenderWith( (ignore case)
+         * NEW: ->RenderWith( (COMPLEX)
+         * EXP: Check that the template location is still valid!
+         * ### @@@@ STOP REPLACEMENT @@@@ ###
+         */
+        return $this->RenderWith(
+            $this->getSSViewer(),
+            null
+        );
     }
 
     /**
@@ -179,27 +298,30 @@ class Slice extends DataObject
      */
     protected function configureFieldTypes(FieldList $fields, array $config)
     {
-        $this->modifyFieldWithSetting($fields, $config, 'fieldClass',
-            function(FormField $field, array $config) use ($fields) {
+        $this->modifyFieldWithSetting(
+            $fields,
+            $config,
+            'fieldClass',
+            function (FormField $field, array $config) use ($fields) {
 
-/**
-  * ### @@@@ START REPLACEMENT @@@@ ###
-  * WHY: upgrade to SS4
-  * OLD: $className (case sensitive)
-  * NEW: $className (COMPLEX)
-  * EXP: Check if the class name can still be used as such
-  * ### @@@@ STOP REPLACEMENT @@@@ ###
-  */
+                /**
+                 * ### @@@@ START REPLACEMENT @@@@ ###
+                 * WHY: upgrade to SS4
+                 * OLD: $className (case sensitive)
+                 * NEW: $className (COMPLEX)
+                 * EXP: Check if the class name can still be used as such
+                 * ### @@@@ STOP REPLACEMENT @@@@ ###
+                 */
                 $className = $config['fieldClass'];
 
-/**
-  * ### @@@@ START REPLACEMENT @@@@ ###
-  * WHY: upgrade to SS4
-  * OLD: $className (case sensitive)
-  * NEW: $className (COMPLEX)
-  * EXP: Check if the class name can still be used as such
-  * ### @@@@ STOP REPLACEMENT @@@@ ###
-  */
+                /**
+                 * ### @@@@ START REPLACEMENT @@@@ ###
+                 * WHY: upgrade to SS4
+                 * OLD: $className (case sensitive)
+                 * NEW: $className (COMPLEX)
+                 * EXP: Check if the class name can still be used as such
+                 * ### @@@@ STOP REPLACEMENT @@@@ ###
+                 */
                 $fields->replaceField($field->getName(), $className::create($field->getName()));
             }
         );
@@ -213,7 +335,7 @@ class Slice extends DataObject
      */
     protected function configureFieldHelp(FieldList $fields, array $config)
     {
-        $this->modifyFieldWithSetting($fields, $config, 'help', function(FormField $field, array $config) {
+        $this->modifyFieldWithSetting($fields, $config, 'help', function (FormField $field, array $config) {
             $field->setRightTitle($config['help']);
         });
     }
@@ -226,7 +348,7 @@ class Slice extends DataObject
      */
     protected function configureFieldLabels(FieldList $fields, array $config)
     {
-        $this->modifyFieldWithSetting($fields, $config, 'label', function(FormField $field, array $config) {
+        $this->modifyFieldWithSetting($fields, $config, 'label', function (FormField $field, array $config) {
             $field->setTitle($config['label']);
         });
     }
@@ -250,15 +372,16 @@ class Slice extends DataObject
             $fields->addFieldToTab(
                 'Root.Main',
                 new DataObjectPreviewField(
-                    Slice::class,
+                    self::class,
                     $this,
                     $this->previewer
                 ),
                 $firstField
             );
         } catch (Exception $e) {
-            $fields->addFieldToTab('Root.Main', new LiteralField(Slice::class,
-                '<div class="message error"><strong>Unable to render slice preview:</strong> '.htmlentities($e->getMessage()).'</div>'
+            $fields->addFieldToTab('Root.Main', new LiteralField(
+                self::class,
+                '<div class="message error"><strong>Unable to render slice preview:</strong> ' . htmlentities($e->getMessage()) . '</div>'
             ), $firstField);
         }
 
@@ -300,137 +423,6 @@ class Slice extends DataObject
     }
 
     /**
-     * Get a map of template types to human-readable names
-     *
-     * If the `name` key is not configured for a template, the template identifier will be split into words
-     *
-     * @return string[]
-     */
-    public function getTemplateNames()
-    {
-        $templates = $this->config()->templates;
-        $map = [];
-
-        foreach ($templates as $name => $config) {
-            if (isset($config['name'])) {
-                $map[$name] = $config['name'];
-            } else {
-                $map[$name] = $this->convertCamelCaseToWords($name);
-            }
-        }
-
-        return $map;
-    }
-
-    /**
-     * Get the template config name to be selected by default for new slices
-     *
-     * @return string
-     */
-    public function getDefaultTemplate()
-    {
-        if ($this->config()->defaultTemplate) {
-            return $this->config()->defaultTemplate;
-        } else {
-            $identifiers = array_keys($this->config()->templates ?: array());
-            return reset($identifiers);
-        }
-    }
-
-    /**
-     * Check if there is a visual option matching the name specified
-     *
-     * Used from templates like <% if $hasLayoutOption('underline') %><% end_if %>
-     *
-     * @param string $name
-     * @return bool
-     */
-    public function hasLayoutOption($name)
-    {
-        return isset($this->record['VisualOptions']) && in_array(
-            $name,
-            explode(
-                ',',
-                $this->record['VisualOptions']
-            )
-        );
-    }
-
-    /**
-     * Returns a rendered state to use with the dataobject preview field
-     *
-     * @return string
-     */
-    public function getPreviewHtml()
-    {
-        Requirements::clear();
-
-        $previewStylesheets = $this->config()->previewStylesheets;
-
-        if (is_array($previewStylesheets)) {
-            foreach($previewStylesheets as $css) {
-                Requirements::css($css);
-            }
-        }
-
-        // The theme can be disabled when in the context of the CMS, which causes includes to fail
-        $themeEnabled = Config::inst()->get(SSViewer::class, 'theme_enabled');
-        Config::modify()->update(SSViewer::class, 'theme_enabled', true);
-
-        $result = $this->customise(array(
-            'Slice' => $this->forTemplate()
-
-/**
-  * ### @@@@ START REPLACEMENT @@@@ ###
-  * WHY: upgrade to SS4
-  * OLD: ->RenderWith( (ignore case)
-  * NEW: ->RenderWith( (COMPLEX)
-  * EXP: Check that the template location is still valid!
-  * ### @@@@ STOP REPLACEMENT @@@@ ###
-  */
-        ))->RenderWith('SliceWrapper');
-
-        Requirements::restore();
-
-        // Restore previous theme_enabled setting
-        Config::modify()->update(SSViewer::class, 'theme_enabled', $themeEnabled);
-
-        return $result;
-    }
-
-    /**
-     * Used in templates to get a iframe preview of the slice
-     *
-     * @return string
-     */
-    public function getPreview()
-    {
-        return $this->previewer->preview($this);
-    }
-
-    /**
-     * Render the slice
-     *
-     * @return HTMLText
-     */
-    public function forTemplate()
-    {
-
-/**
-  * ### @@@@ START REPLACEMENT @@@@ ###
-  * WHY: upgrade to SS4
-  * OLD: ->RenderWith( (ignore case)
-  * NEW: ->RenderWith( (COMPLEX)
-  * EXP: Check that the template location is still valid!
-  * ### @@@@ STOP REPLACEMENT @@@@ ###
-  */
-        return $this->RenderWith(
-            $this->getSSViewer(),
-            null
-        );
-    }
-
-    /**
      * Tries to get an SSViewer based on the current configuration
      *
      * @throws Exception
@@ -464,7 +456,7 @@ class Slice extends DataObject
      */
     protected function getBaseSliceClass()
     {
-        return __CLASS__;
+        return self::class;
     }
 
     /**
@@ -476,12 +468,13 @@ class Slice extends DataObject
     protected function getTemplateList()
     {
         $templates = SS_TemplateLoader::instance()->findTemplates(
-            $tryTemplates = $this->getTemplateSearchNames(), Config::inst()->get(SSViewer::class, 'theme')
+            $tryTemplates = $this->getTemplateSearchNames(),
+            Config::inst()->get(SSViewer::class, 'theme')
         );
 
-        if (!$templates) {
+        if (! $templates) {
             throw new Exception(
-                'Can\'t find a template from list: "'.implode('", "', $tryTemplates).'"'
+                'Can\'t find a template from list: "' . implode('", "', $tryTemplates) . '"'
             );
         }
 
@@ -552,7 +545,7 @@ EOD
      */
     protected function getConfiguredFieldNames(array $templateConfig)
     {
-        return isset($templateConfig['fields']) ? array_keys($templateConfig['fields']) : array();
+        return isset($templateConfig['fields']) ? array_keys($templateConfig['fields']) : [];
     }
 
     /**
@@ -583,7 +576,7 @@ EOD
      */
     protected function getCurrentTemplateConfig()
     {
-        return $this->getTemplateConfig($this->Template ?: $this->getDefaultTemplate()) ?: array();
+        return $this->getTemplateConfig($this->Template ?: $this->getDefaultTemplate()) ?: [];
     }
 
     /**
@@ -594,7 +587,7 @@ EOD
      */
     protected function getTemplateConfig($name)
     {
-        $config = $this->config()->get('templates') ?: array();
+        $config = $this->config()->get('templates') ?: [];
 
         if (isset($config[$name])) {
             return $this->normaliseTemplateConfig($config[$name]);
@@ -610,10 +603,10 @@ EOD
         // Transform "FieldName: 'Field title'" into "FieldName.label: 'Field title'" as a config shortcut
         if (isset($config['fields'])) {
             foreach ($config['fields'] as $fieldName => &$fieldConfig) {
-                if (!is_array($fieldConfig)) {
-                    $fieldConfig = array(
-                        'label' => $fieldConfig
-                    );
+                if (! is_array($fieldConfig)) {
+                    $fieldConfig = [
+                        'label' => $fieldConfig,
+                    ];
                 }
             }
         }
