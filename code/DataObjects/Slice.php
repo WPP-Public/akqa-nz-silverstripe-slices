@@ -1,6 +1,6 @@
 <?php
 
-class Slice extends DataObject implements DataObjectPreviewInterface
+class Slice extends DataObject
 {
     private static $dependencies = array(
         'previewer' => '%$DataObjectPreviewer'
