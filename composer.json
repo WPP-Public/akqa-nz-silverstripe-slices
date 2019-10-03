@@ -1,7 +1,7 @@
 {
     "name": "sunnysideup/slices",
     "description": "Provides a Slice extension to DataObject subclasses with custom templates",
-    "type": "silverstripe-module",
+    "type": "silverstripe-vendormodule",
     "license": "MIT",
     "authors": [
         {
