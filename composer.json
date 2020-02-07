@@ -19,7 +19,7 @@
 		"composer/installers": "~1.0",
 		"symbiote/silverstripe-gridfieldextensions": "~2.0",
 		"heyday/silverstripe-dataobjectpreview": "~1.0",
-		"heyday/silverstripe-versioneddataobjects": "~1.0"
+		"heyday/silverstripe-versioneddataobjects": "^2.0"
 	},
 	"extra": {
 		"branch-alias": {
