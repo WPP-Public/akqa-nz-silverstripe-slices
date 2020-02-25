@@ -8,7 +8,7 @@ Injector:
 
 Slice:
   extensions:
-    - 'VersionedDataObject'
+    - '\Heyday\VersionedDataObjects\VersionedDataObject'
 
   dependencies:
     previewer: "%$DataObjectPreviewer"
