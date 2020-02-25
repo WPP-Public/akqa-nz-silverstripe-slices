@@ -1,5 +1,8 @@
 <?php
 
+use Heyday\VersionedDataObjects\VersionedDataObjectDetailsForm;
+use Heyday\VersionedDataObjects\VersionedDataObjectDetailsForm_ItemRequest;
+
 class SliceDetailsForm extends VersionedDataObjectDetailsForm
 {
 }
