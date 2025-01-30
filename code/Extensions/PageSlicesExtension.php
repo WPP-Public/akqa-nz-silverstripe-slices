@@ -3,7 +3,6 @@
 namespace Heyday\SilverStripeSlices\Extensions;
 
 use Heyday\SilverStripeSlices\DataObjects\Slice;
-use Heyday\SilverStripeSlices\Forms\SliceDetailsForm;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
@@ -19,6 +18,18 @@ class PageSlicesExtension extends DataExtension
 {
     private static $has_many = [
         'Slices' => Slice::class
+    ];
+
+    private static $owns = [
+        'Slices'
+    ];
+
+    private static $cascade_deletes = [
+        'Slices'
+    ];
+
+    private static $cascade_duplicates = [
+        'Slices'
     ];
 
     public function updateCMSFields(FieldList $fields)
@@ -51,13 +62,16 @@ class PageSlicesExtension extends DataExtension
 
         $gridConfig->removeComponentsByType(GridFieldDeleteAction::class);
         $gridConfig->removeComponentsByType(GridFieldDetailForm::class);
-        $gridConfig->addComponent(new SliceDetailsForm());
 
         // Change columns displayed
+        /** @var GridFieldDataColumns $dataColumns */
         $dataColumns = $gridConfig->getComponentByType(GridFieldDataColumns::class);
-        $dataColumns->setDisplayFields($this->modifyDisplayFields(
-            $dataColumns->getDisplayFields($grid)
-        ));
+
+        if ($dataColumns) {
+            $dataColumns->setDisplayFields($this->modifyDisplayFields(
+                $dataColumns->getDisplayFields($grid)
+            ));
+        }
     }
 
     protected function modifyDisplayFields(array $fields)

@@ -28,15 +28,15 @@ class Slice extends DataObject
     /**
      * @var array
      */
-    private static $db = array(
+    private static $db = [
         'Template' => 'Varchar(255)',
         'VisualOptions' => 'Varchar(255)',
         'Sort' => 'Int',
-    );
+    ];
 
-    private static $has_one = array(
+    private static $has_one = [
         'Parent' => SiteTree::class
-    );
+    ];
 
     private static $default_sort = 'Sort ASC';
 
