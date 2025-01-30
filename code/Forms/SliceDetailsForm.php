@@ -1,9 +1,18 @@
 <?php
+namespace Heyday\SilverStripeSlices\Forms;
 
+<<<<<<< HEAD:code/Form/SliceDetailsForm.php
 use Heyday\VersionedDataObjects\VersionedDataObjectDetailsForm;
 use Heyday\VersionedDataObjects\VersionedDataObjectDetailsForm_ItemRequest;
 
 class SliceDetailsForm extends VersionedDataObjectDetailsForm
+=======
+use Heyday\SilverStripeSlices\DataObjects\Slice;
+use SilverStripe\Forms\GridField\GridFieldDetailForm;
+use SilverStripe\Forms\GridField\GridFieldDetailForm_ItemRequest;
+
+class SliceDetailsForm extends GridFieldDetailForm
+>>>>>>> 7db8c58 (working my way through namespaces etc):code/Forms/SliceDetailsForm.php
 {
 }
 
@@ -19,14 +28,14 @@ class SliceDetailsForm extends VersionedDataObjectDetailsForm
  * are compatible. Object::config() uses get_called_class(), which makes it return the config for
  * the old class if the instance is not recreated, causing non-sense looking errors.
  */
-class SliceDetailsForm_ItemRequest extends VersionedDataObjectDetailsForm_ItemRequest
+class SliceDetailsForm_ItemRequest extends GridFieldDetailForm_ItemRequest
 {
     public function __construct($gridField, $component, $record, $requestHandler, $popupFormName)
     {
         parent::__construct($gridField, $component, $record, $requestHandler, $popupFormName);
 
         if (!$this->record instanceof Slice) {
-            throw new RuntimeException('SliceDetailsForm expects to work with instances of Slice. Was given a ' . get_class($this->record));
+            throw new \RuntimeException('SliceDetailsForm expects to work with instances of Slice. Was given a ' . get_class($this->record));
         }
     }
 

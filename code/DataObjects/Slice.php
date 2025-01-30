@@ -1,11 +1,33 @@
 <?php
 
-class Slice extends DataObject implements DataObjectPreviewInterface
-{
-    private static $dependencies = array(
-        'previewer' => '%$DataObjectPreviewer'
-    );
+namespace Heyday\SilverStripeSlices\DataObjects;
 
+use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\Control\Director;
+use SilverStripe\Core\ClassInfo;
+use SilverStripe\Core\Config\Config;
+use SilverStripe\Forms\DropdownField;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\FileField;
+use SilverStripe\Forms\FormField;
+use SilverStripe\Forms\ListboxField;
+use SilverStripe\Forms\LiteralField;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\FieldType\DBHTMLText;
+use SilverStripe\Versioned\Versioned;
+use SilverStripe\View\Requirements;
+use SilverStripe\View\SSViewer;
+use SilverStripe\View\ThemeResourceLoader;
+
+/**
+ * Class Slice
+ * @package Heyday\SilverStripeSlices\DataObjects
+ */
+class Slice extends DataObject
+{
+    /**
+     * @var array
+     */
     private static $db = array(
         'Template' => 'Varchar(255)',
         'VisualOptions' => 'Varchar(255)',
@@ -13,15 +35,22 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     );
 
     private static $has_one = array(
-        'Parent' => 'Page'
+        'Parent' => SiteTree::class
     );
 
     private static $default_sort = 'Sort ASC';
 
     /**
-     * @var DataObjectPreviewer
+     * @var array
      */
-    public $previewer;
+    private static $extensions = [
+        Versioned::class
+    ];
+
+    /**
+     * @var string
+     */
+    private static $table_name = 'Slice';
 
     /**
      * @return FieldList
@@ -73,15 +102,15 @@ class Slice extends DataObject implements DataObjectPreviewInterface
 
         if (isset($config['className'])) {
             if (!ClassInfo::exists($config['className'])) {
-                throw new RuntimeException("Cannot change {$this->getBaseSliceClass()} be the non-existent class '{$config['className']}'");
+                throw new \RuntimeException("Cannot change {$this->getBaseSliceClass()} be the non-existent class '{$config['className']}'");
             }
 
             $this->setClassName($config['className']);
 
             // Prevent an error occurring when changing the class of an object that hasn't been saved yet
-            if($this->unsavedRelations) {
-                foreach($this->unsavedRelations as $name => $list) {
-                    if(!$this->hasMethod($name)) {
+            if ($this->unsavedRelations) {
+                foreach ($this->unsavedRelations as $name => $list) {
+                    if (!$this->hasMethod($name)) {
                         unset($this->unsavedRelations[$name]);
                     }
                 }
@@ -114,7 +143,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     protected function configureFieldTypes(FieldList $fields, array $config)
     {
         $this->modifyFieldWithSetting($fields, $config, 'fieldClass',
-            function(FormField $field, array $config) use ($fields) {
+            function (FormField $field, array $config) use ($fields) {
                 $className = $config['fieldClass'];
                 $fields->replaceField($field->getName(), $className::create($field->getName()));
             }
@@ -129,7 +158,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
      */
     protected function configureFieldHelp(FieldList $fields, array $config)
     {
-        $this->modifyFieldWithSetting($fields, $config, 'help', function(FormField $field, array $config) {
+        $this->modifyFieldWithSetting($fields, $config, 'help', function (FormField $field, array $config) {
             $field->setRightTitle($config['help']);
         });
     }
@@ -142,7 +171,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
      */
     protected function configureFieldLabels(FieldList $fields, array $config)
     {
-        $this->modifyFieldWithSetting($fields, $config, 'label', function(FormField $field, array $config) {
+        $this->modifyFieldWithSetting($fields, $config, 'label', function (FormField $field, array $config) {
             $field->setTitle($config['label']);
         });
     }
@@ -159,24 +188,6 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         // Add the slice preview at the top of the fieldset
         $tab = $fields->findOrMakeTab('Root.Main');
         $firstField = $tab->getChildren()->first() ? $tab->getChildren()->first()->getName() : null;
-
-        // Add the slice preview at the top of the tab
-        try {
-            $this->getTemplateList();
-            $fields->addFieldToTab(
-                'Root.Main',
-                new DataObjectPreviewField(
-                    'Slice',
-                    $this,
-                    $this->previewer
-                ),
-                $firstField
-            );
-        } catch (Exception $e) {
-            $fields->addFieldToTab('Root.Main', new LiteralField('Slice',
-                '<div class="message error"><strong>Unable to render slice preview:</strong> '.htmlentities($e->getMessage()).'</div>'
-            ), $firstField);
-        }
 
         // Template selection
         $fields->addFieldToTab(
@@ -204,7 +215,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
 
     protected function configureUploadFolder(FieldList $fields)
     {
-        $fieldNames = (array) $this->config()->uploadFolderFields;
+        $fieldNames = (array)$this->config()->uploadFolderFields;
 
         foreach ($fieldNames as $name) {
             $field = $fields->dataFieldByName($name);
@@ -224,7 +235,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
      */
     public function getTemplateNames()
     {
-        $templates = $this->config()->templates;
+        $templates = Config::inst()->get(get_class($this), 'templates');
         $map = array();
 
         foreach ($templates as $name => $config) {
@@ -264,12 +275,12 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     public function hasLayoutOption($name)
     {
         return isset($this->record['VisualOptions']) && in_array(
-            $name,
-            explode(
-                ',',
-                $this->record['VisualOptions']
-            )
-        );
+                $name,
+                explode(
+                    ',',
+                    $this->record['VisualOptions']
+                )
+            );
     }
 
     /**
@@ -284,7 +295,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
         $previewStylesheets = $this->config()->previewStylesheets;
 
         if (is_array($previewStylesheets)) {
-            foreach($previewStylesheets as $css) {
+            foreach ($previewStylesheets as $css) {
                 Requirements::css($css);
             }
         }
@@ -306,19 +317,9 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     }
 
     /**
-     * Used in templates to get a iframe preview of the slice
-     *
-     * @return string
-     */
-    public function getPreview()
-    {
-        return $this->previewer->preview($this);
-    }
-
-    /**
      * Render the slice
      *
-     * @return HTMLText
+     * @return DBHTMLText
      */
     public function forTemplate()
     {
@@ -331,7 +332,7 @@ class Slice extends DataObject implements DataObjectPreviewInterface
     /**
      * Tries to get an SSViewer based on the current configuration
      *
-     * @throws Exception
+     * @throws \Exception
      * @return SSViewer
      */
     protected function getSSViewer()
@@ -369,21 +370,26 @@ class Slice extends DataObject implements DataObjectPreviewInterface
      * Return a list of templates to pass to an SSViewer when rendering
      *
      * @return string[]
-     * @throws Exception
+     * @throws \Exception
      */
     protected function getTemplateList()
     {
-        $templates = SS_TemplateLoader::instance()->findTemplates(
-            $tryTemplates = $this->getTemplateSearchNames(), Config::inst()->get('SSViewer', 'theme')
+        $themes = SSViewer::get_themes();
+        if (($key = array_search('$default', $themes)) !== false) {
+            unset($themes[$key]);
+        }
+        $tryTemplates = $this->getTemplateSearchNames();
+        $template = ThemeResourceLoader::inst()->findTemplate(
+            $tryTemplates, $themes
         );
 
-        if (!$templates) {
-            throw new Exception(
-                'Can\'t find a template from list: "'.implode('", "', $tryTemplates).'"'
+        if (!$template) {
+            throw new \Exception(
+                'Can\'t find a template from list: "' . implode('", "', $tryTemplates) . '"'
             );
         }
 
-        return reset($templates);
+        return [$template];
     }
 
     /**

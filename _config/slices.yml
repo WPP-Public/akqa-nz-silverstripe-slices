@@ -2,16 +2,4 @@
 Name: 'slices'
 ---
 
-Injector:
-  DataObjectPreviewer:
-    class: DataObjectPreviewer
-
-Slice:
-  extensions:
-    - '\Heyday\VersionedDataObjects\VersionedDataObject'
-
-  dependencies:
-    previewer: "%$DataObjectPreviewer"
-
-  previewStylesheets: []
 

@@ -1,5 +1,11 @@
 <?php
 
+namespace Heyday\SilverStripeSlices\Extensions;
+
+use SilverStripe\ORM\DataExtension;
+use SilverStripe\Security\Member;
+use SilverStripe\Security\Permission;
+
 /**
  * Apply the SiteTree edit/view/delete permissions/roles to any DataObject
  *
@@ -7,9 +13,13 @@
  */
 class SiteTreePermissionsExtension extends DataExtension
 {
+    /**
+     * @param null $member
+     * @return bool
+     */
     public function canView($member = null)
     {
-        if(!$member instanceof Member) {
+        if (!$member instanceof Member) {
             $member = Member::currentUser();
         }
 
@@ -20,14 +30,22 @@ class SiteTreePermissionsExtension extends DataExtension
         return $this->owner->canView($member);
     }
 
+    /**
+     * @param null $member
+     * @return bool
+     */
     public function canCreate($member = null)
     {
         return $this->owner->canEdit($member);
     }
 
+    /**
+     * @param null $member
+     * @return bool
+     */
     public function canEdit($member = null)
     {
-        if(!$member instanceof Member) {
+        if (!$member instanceof Member) {
             $member = Member::currentUser();
         }
 
@@ -38,9 +56,13 @@ class SiteTreePermissionsExtension extends DataExtension
         return $this->owner->canEdit($member);
     }
 
+    /**
+     * @param null $member
+     * @return bool
+     */
     public function canDelete($member = null)
     {
-        if(!$member instanceof Member) {
+        if (!$member instanceof Member) {
             $member = Member::currentUser();
         }
 
