@@ -4,19 +4,19 @@
   "type": "silverstripe-vendormodule",
   "license": "MIT",
   "require": {
-    "silverstripe/cms": "~4.0",
-    "symbiote/silverstripe-gridfieldextensions": "~3.0"
+    "silverstripe/cms": "^5",
+    "symbiote/silverstripe-gridfieldextensions": "^4"
   },
   "prefer-stable": true,
   "minimum-stability": "dev",
   "autoload": {
     "psr-4": {
-      "Heyday\\SilverStripeSlices\\": "code/"
+      "Heyday\\SilverStripeSlices\\": "src/"
     }
   },
   "extra": {
     "branch-alias": {
-      "dev-main": "2.0.x-dev"
+      "dev-main": "3.0.x-dev"
     }
   },
   "config": {
