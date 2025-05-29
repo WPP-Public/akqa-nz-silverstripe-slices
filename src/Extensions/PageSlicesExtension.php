@@ -61,7 +61,6 @@ class PageSlicesExtension extends DataExtension
         );
 
         $gridConfig->removeComponentsByType(GridFieldDeleteAction::class);
-        $gridConfig->removeComponentsByType(GridFieldDetailForm::class);
 
         // Change columns displayed
         /** @var GridFieldDataColumns $dataColumns */
