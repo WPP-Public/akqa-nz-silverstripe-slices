@@ -142,7 +142,10 @@ class Slice extends DataObject
      */
     protected function configureFieldTypes(FieldList $fields, array $config)
     {
-        $this->modifyFieldWithSetting($fields, $config, 'fieldClass',
+        $this->modifyFieldWithSetting(
+            $fields,
+            $config,
+            'fieldClass',
             function (FormField $field, array $config) use ($fields) {
                 $className = $config['fieldClass'];
                 $fields->replaceField($field->getName(), $className::create($field->getName()));
@@ -205,8 +208,7 @@ class Slice extends DataObject
                     'Visual Options',
                     $config['visualOptions'],
                     '',
-                    null,
-                    true
+                    null
                 ),
                 $firstField
             );
@@ -236,7 +238,13 @@ class Slice extends DataObject
     public function getTemplateNames()
     {
         $templates = Config::inst()->get(get_class($this), 'templates');
-        $map = array();
+
+        // Ensure templates is always an array to prevent foreach errors
+        if (!is_array($templates)) {
+            $templates = [];
+        }
+
+        $map = [];
 
         foreach ($templates as $name => $config) {
             if (isset($config['name'])) {
@@ -256,10 +264,17 @@ class Slice extends DataObject
      */
     public function getDefaultTemplate()
     {
-        if ($this->config()->defaultTemplate) {
-            return $this->config()->defaultTemplate;
+        if ($this->config()->get('defaultTemplate')) {
+            return $this->config()->get('defaultTemplate');
         } else {
-            $identifiers = array_keys($this->config()->templates ?: array());
+            $templates = $this->config()->get('templates');
+
+            // Ensure templates is always an array to prevent errors
+            if (!is_array($templates)) {
+                $templates = [];
+            }
+
+            $identifiers = array_keys($templates);
             return reset($identifiers);
         }
     }
@@ -275,12 +290,12 @@ class Slice extends DataObject
     public function hasLayoutOption($name)
     {
         return isset($this->record['VisualOptions']) && in_array(
-                $name,
-                explode(
-                    ',',
-                    $this->record['VisualOptions']
-                )
-            );
+            $name,
+            explode(
+                ',',
+                $this->record['VisualOptions']
+            )
+        );
     }
 
     /**
@@ -301,8 +316,8 @@ class Slice extends DataObject
         }
 
         // The theme can be disabled when in the context of the CMS, which causes includes to fail
-        $themeEnabled = Config::inst()->get('SSViewer', 'theme_enabled');
-        Config::inst()->update('SSViewer', 'theme_enabled', true);
+        $themeEnabled = Config::inst()->get(SSViewer::class, 'theme_enabled');
+        Config::modify()->set(SSViewer::class, 'theme_enabled', true);
 
         $result = $this->customise(array(
             'Slice' => $this->forTemplate()
@@ -311,7 +326,7 @@ class Slice extends DataObject
         Requirements::restore();
 
         // Restore previous theme_enabled setting
-        Config::inst()->update('SSViewer', 'theme_enabled', $themeEnabled);
+        Config::modify()->set(SSViewer::class, 'theme_enabled', $themeEnabled);
 
         return $result;
     }
@@ -380,7 +395,8 @@ class Slice extends DataObject
         }
         $tryTemplates = $this->getTemplateSearchNames();
         $template = ThemeResourceLoader::inst()->findTemplate(
-            $tryTemplates, $themes
+            $tryTemplates,
+            $themes
         );
 
         if (!$template) {
@@ -399,7 +415,7 @@ class Slice extends DataObject
      */
     protected function getTemplateSearchNames()
     {
-        $templates = array();
+        $templates = [];
         $prefix = $this->getTemplateClass();
 
         $templates[] = $prefix . '_' . ($this->Template ?: $this->getDefaultTemplate());
@@ -456,7 +472,7 @@ EOD
      */
     protected function getConfiguredFieldNames(array $templateConfig)
     {
-        return isset($templateConfig['fields']) ? array_keys($templateConfig['fields']) : array();
+        return isset($templateConfig['fields']) ? array_keys($templateConfig['fields']) : [];
     }
 
     /**
@@ -487,22 +503,29 @@ EOD
      */
     protected function getCurrentTemplateConfig()
     {
-        return $this->getTemplateConfig($this->Template ?: $this->getDefaultTemplate()) ?: array();
+        return $this->getTemplateConfig($this->Template ?: $this->getDefaultTemplate()) ?: [];
     }
 
     /**
      * Get the config for a template of this slice
      *
      * @param string $name
-     * @return array
+     * @return array|null
      */
     protected function getTemplateConfig($name)
     {
-        $config = $this->config()->get('templates') ?: array();
+        $config = $this->config()->get('templates');
+
+        // Ensure config is always an array to prevent errors
+        if (!is_array($config)) {
+            $config = [];
+        }
 
         if (isset($config[$name])) {
             return $this->normaliseTemplateConfig($config[$name]);
         }
+
+        return null;
     }
 
     /**
@@ -525,3 +548,4 @@ EOD
         return $config;
     }
 }
+
