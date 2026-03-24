@@ -229,6 +229,28 @@ class Slice extends DataObject
     }
 
     /**
+     * Templates from the base slice class (where YAML defines them), after {@link updateTemplateNames}.
+     *
+     * Polymorphic slice records use concrete class names (e.g. VideoSlice) while `templates` are usually
+     * configured on the project base slice (e.g. ContentSlice). {@link getBaseSliceClass()} supplies that class.
+     *
+     * Extensions may replace or amend the `$templates` array by reference via `updateTemplateNames`.
+     *
+     * @return array<string, array>
+     */
+    protected function getEffectiveTemplatesConfig(): array
+    {
+        $templates = Config::forClass($this->getBaseSliceClass())->get('templates');
+        if (!is_array($templates)) {
+            $templates = [];
+        }
+
+        $this->extend('updateTemplateNames', $templates);
+
+        return is_array($templates) ? $templates : [];
+    }
+
+    /**
      * Get a map of template types to human-readable names
      *
      * If the `name` key is not configured for a template, the template identifier will be split into words
@@ -237,12 +259,7 @@ class Slice extends DataObject
      */
     public function getTemplateNames()
     {
-        $templates = Config::inst()->get(get_class($this), 'templates');
-
-        // Ensure templates is always an array to prevent foreach errors
-        if (!is_array($templates)) {
-            $templates = [];
-        }
+        $templates = $this->getEffectiveTemplatesConfig();
 
         $map = [];
 
@@ -264,19 +281,15 @@ class Slice extends DataObject
      */
     public function getDefaultTemplate()
     {
-        if ($this->config()->get('defaultTemplate')) {
-            return $this->config()->get('defaultTemplate');
-        } else {
-            $templates = $this->config()->get('templates');
-
-            // Ensure templates is always an array to prevent errors
-            if (!is_array($templates)) {
-                $templates = [];
-            }
-
-            $identifiers = array_keys($templates);
-            return reset($identifiers);
+        $default = Config::forClass($this->getBaseSliceClass())->get('defaultTemplate');
+        if ($default) {
+            return $default;
         }
+
+        $templates = $this->getEffectiveTemplatesConfig();
+        $identifiers = array_keys($templates);
+
+        return reset($identifiers);
     }
 
     /**
@@ -514,12 +527,7 @@ EOD
      */
     protected function getTemplateConfig($name)
     {
-        $config = $this->config()->get('templates');
-
-        // Ensure config is always an array to prevent errors
-        if (!is_array($config)) {
-            $config = [];
-        }
+        $config = $this->getEffectiveTemplatesConfig();
 
         if (isset($config[$name])) {
             return $this->normaliseTemplateConfig($config[$name]);

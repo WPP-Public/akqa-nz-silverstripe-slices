@@ -70,6 +70,20 @@ class PageSlicesExtension extends DataExtension
             $dataColumns->setDisplayFields($this->modifyDisplayFields(
                 $dataColumns->getDisplayFields($grid)
             ));
+
+            $dataColumns->setFieldFormatting(array_merge(
+                $dataColumns->getFieldFormatting() ?: [],
+                [
+                    'Template' => static function ($value, $record) {
+                        if (!$record instanceof Slice) {
+                            return $value;
+                        }
+                        $map = $record->getTemplateNames();
+
+                        return $map[$value] ?? $value;
+                    },
+                ]
+            ));
         }
     }
 
