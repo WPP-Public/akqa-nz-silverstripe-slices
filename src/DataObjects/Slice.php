@@ -29,6 +29,7 @@ class Slice extends DataObject
      * @var array
      */
     private static $db = [
+        'Title' => 'Varchar(255)',
         'Template' => 'Varchar(255)',
         'VisualOptions' => 'Varchar(255)',
         'Sort' => 'Int',

@@ -67,8 +67,10 @@ class PageSlicesExtension extends DataExtension
         $dataColumns = $gridConfig->getComponentByType(GridFieldDataColumns::class);
 
         if ($dataColumns) {
+            // SS5 summaryFields() falls back to ID-only when nothing else is configured; Slice has no Title in
+            // core schema, so we must set columns explicitly. Include Title when the relation model defines it.
             $dataColumns->setDisplayFields($this->modifyDisplayFields(
-                $dataColumns->getDisplayFields($grid)
+                $this->buildSliceGridDisplayFields($grid)
             ));
 
             $dataColumns->setFieldFormatting(array_merge(
@@ -87,10 +89,38 @@ class PageSlicesExtension extends DataExtension
         }
     }
 
+    /**
+     * Default columns for the Slices grid: Title (if present on the slice model) and template type.
+     *
+     * @return array<string, string>
+     */
+    protected function buildSliceGridDisplayFields(GridField $grid): array
+    {
+        $modelClass = $grid->getModelClass();
+        $singleton = singleton($modelClass);
+
+        $fields = [
+            'Template' => 'Types',
+        ];
+
+        if ($singleton->hasField('Title')) {
+            $fields = array_merge(
+                ['Title' => 'Title'],
+                $fields
+            );
+        }
+
+        return $fields;
+    }
+
+    /**
+     * Override in project extensions to add, remove, or relabel grid columns.
+     *
+     * @param array<string, string> $fields
+     * @return array<string, string>
+     */
     protected function modifyDisplayFields(array $fields)
     {
-        unset($fields['Title']);
-
         return $fields;
     }
 }
