@@ -2,4 +2,10 @@
 Name: 'slices'
 ---
 
+# Optional: after moving fields from a subclass (e.g. ContentSlice) onto Slice, map base field => subclass FQCN.
+# CMS open/save runs a per-row copy; run BuildTask sync-slice-legacy-subclass-data once to backfill the grid.
+#
+# Heyday\SilverStripeSlices\DataObjects\Slice:
+#   legacy_subclass_fallback_fields:
+#     Title: MyProject\DataObjects\ContentSlice
 

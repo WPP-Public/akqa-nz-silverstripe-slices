@@ -13,6 +13,7 @@ use SilverStripe\Forms\FormField;
 use SilverStripe\Forms\ListboxField;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\DB;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\Requirements;
@@ -54,10 +55,25 @@ class Slice extends DataObject
     private static $table_name = 'Slice';
 
     /**
+     * When common fields were historically stored only on a subclass table (e.g. ContentSlice) but are now read
+     * from the base Slice row, map each base field name to the subclass FQCN that still holds legacy values
+     * (rows share the same ID). Empty base values are copied with SQL; Stage and Live tables are updated when
+     * {@link Versioned} applies.
+     *
+     * This runs when editing or saving a slice. For GridField lists, run {@link \Heyday\SilverStripeSlices\Tasks\SyncSliceLegacySubclassDataTask} once.
+     *
+     * @config
+     * @var array<string, class-string>
+     */
+    private static $legacy_subclass_fallback_fields = [];
+
+    /**
      * @return FieldList
      */
     public function getCMSFields()
     {
+        $this->syncLegacySubclassFallbackData();
+
         $fields = parent::getCMSFields();
         $fields->removeByName('Template');
         $fields->removeByName('VisualOptions');
@@ -83,6 +99,8 @@ class Slice extends DataObject
 
     public function onBeforeWrite()
     {
+        $this->syncLegacySubclassFallbackData();
+
         parent::onBeforeWrite();
 
         // Clear visual options when the template changes to prevent them hanging around
@@ -481,12 +499,28 @@ EOD
     }
 
     /**
+     * DB fields that must always stay on the main slice form, even when not listed under a template’s `fields:`.
+     * Without this, {@link removeUnconfiguredFields()} strips them in non-dev mode (no CMS field → looks blank;
+     * saves can drop the value). The grid still reads `Title` from the record, so it stayed out of sync.
+     *
+     * @return string[]
+     */
+    protected function getBuiltInSliceFieldNames(): array
+    {
+        return ['Title'];
+    }
+
+    /**
+     * Field names considered “configured” for pruning and tab field order (YAML `fields` plus built-ins).
+     *
      * @param array $templateConfig
      * @return string[]
      */
     protected function getConfiguredFieldNames(array $templateConfig)
     {
-        return isset($templateConfig['fields']) ? array_keys($templateConfig['fields']) : [];
+        $fromYaml = isset($templateConfig['fields']) ? array_keys($templateConfig['fields']) : [];
+
+        return array_values(array_unique(array_merge($this->getBuiltInSliceFieldNames(), $fromYaml)));
     }
 
     /**
@@ -555,6 +589,186 @@ EOD
         }
 
         return $config;
+    }
+
+    /**
+     * Copy configured empty fields from legacy subclass rows into the base Slice table for this record, then
+     * refresh those properties on the instance from the base table (draft).
+     */
+    protected function syncLegacySubclassFallbackData(): void
+    {
+        if (!$this->isInDB()) {
+            return;
+        }
+
+        $fallbacks = $this->config()->get('legacy_subclass_fallback_fields');
+        if (empty($fallbacks) || !is_array($fallbacks)) {
+            return;
+        }
+
+        static::run_legacy_subclass_sync([(int)$this->ID]);
+        $this->reloadLegacyFallbackFieldsFromBase();
+    }
+
+    /**
+     * Batch copy for all slice rows (or a subset). Returns total affected rows from MySQL.
+     *
+     * @param int[]|null $ids Null = every ID on the base Slice table.
+     */
+    public static function run_legacy_subclass_sync(?array $ids = null): int
+    {
+        $fallbacks = Config::forClass(self::class)->get('legacy_subclass_fallback_fields');
+        if (empty($fallbacks) || !is_array($fallbacks)) {
+            return 0;
+        }
+
+        $schema = DataObject::getSchema();
+        $baseTable = $schema->tableName(self::class);
+        $useLive = static::singleton()->hasExtension(Versioned::class);
+
+        $grouped = [];
+        foreach ($fallbacks as $field => $sourceClass) {
+            if (!is_string($field) || !static::is_valid_sql_identifier($field)) {
+                continue;
+            }
+            if (!is_string($sourceClass) || !class_exists($sourceClass)) {
+                continue;
+            }
+            if (!is_subclass_of($sourceClass, self::class)) {
+                continue;
+            }
+            $extTable = $schema->tableName($sourceClass);
+            if ($extTable === $baseTable) {
+                continue;
+            }
+            if (!static::table_has_column($baseTable, $field) || !static::table_has_column($extTable, $field)) {
+                continue;
+            }
+            $grouped[$sourceClass][] = $field;
+        }
+
+        $total = 0;
+
+        foreach ($grouped as $sourceClass => $fields) {
+            $extTable = $schema->tableName($sourceClass);
+            if ($extTable === $baseTable) {
+                continue;
+            }
+
+            $pairs = [[$baseTable, $extTable]];
+            if ($useLive) {
+                $pairs[] = [$baseTable . '_Live', $extTable . '_Live'];
+            }
+
+            foreach ($pairs as [$b, $e]) {
+                foreach ($fields as $column) {
+                    $total += static::run_legacy_subclass_column_sync($b, $e, $column, $ids);
+                }
+            }
+        }
+
+        return $total;
+    }
+
+    /**
+     * @param int[]|null $ids
+     */
+    protected static function run_legacy_subclass_column_sync(
+        string $baseTable,
+        string $extTable,
+        string $column,
+        ?array $ids
+    ): int {
+        if (!static::is_valid_sql_identifier($baseTable)
+            || !static::is_valid_sql_identifier($extTable)
+            || !static::is_valid_sql_identifier($column)
+        ) {
+            return 0;
+        }
+
+        $sql = sprintf(
+            'UPDATE `%1$s` s INNER JOIN `%2$s` c ON s.`ID` = c.`ID` '
+            . 'SET s.`%3$s` = c.`%3$s` '
+            . 'WHERE (s.`%3$s` IS NULL OR s.`%3$s` = \'\') '
+            . 'AND c.`%3$s` IS NOT NULL AND TRIM(c.`%3$s`) <> \'\'',
+            $baseTable,
+            $extTable,
+            $column
+        );
+
+        if ($ids !== null) {
+            $ids = array_values(array_filter(array_map('intval', $ids)));
+            if ($ids === []) {
+                return 0;
+            }
+            $sql .= ' AND s.`ID` IN (' . implode(',', $ids) . ')';
+        }
+
+        DB::query($sql);
+
+        return (int)DB::affected_rows();
+    }
+
+    /**
+     * Reload fallback columns from the draft base table into this instance after a sync.
+     */
+    protected function reloadLegacyFallbackFieldsFromBase(): void
+    {
+        $fallbacks = $this->config()->get('legacy_subclass_fallback_fields');
+        if (empty($fallbacks) || !is_array($fallbacks)) {
+            return;
+        }
+
+        $fields = [];
+        $baseTable = DataObject::getSchema()->tableName(self::class);
+        foreach (array_keys($fallbacks) as $field) {
+            if (is_string($field) && static::is_valid_sql_identifier($field) && static::table_has_column($baseTable, $field)) {
+                $fields[] = $field;
+            }
+        }
+
+        if ($fields === []) {
+            return;
+        }
+
+        $quoted = array_map(static fn ($f) => '`' . $f . '`', $fields);
+        $sql = 'SELECT ' . implode(',', $quoted) . ' FROM `' . $baseTable . '` WHERE `ID` = ?';
+        $row = DB::prepared_query($sql, [$this->ID])->record();
+
+        if (!$row) {
+            return;
+        }
+
+        foreach ($fields as $field) {
+            if (array_key_exists($field, $row)) {
+                $this->setField($field, $row[$field]);
+            }
+        }
+    }
+
+    protected static function is_valid_sql_identifier(string $name): bool
+    {
+        return (bool)preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $name);
+    }
+
+    protected static function table_has_column(string $table, string $column): bool
+    {
+        if (!static::is_valid_sql_identifier($table) || !static::is_valid_sql_identifier($column)) {
+            return false;
+        }
+
+        $list = DB::field_list($table);
+        if (!$list) {
+            return false;
+        }
+
+        foreach (array_keys($list) as $key) {
+            if (strcasecmp((string)$key, $column) === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 
