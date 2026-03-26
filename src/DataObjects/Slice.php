@@ -237,7 +237,7 @@ class Slice extends DataObject
      */
     public function getTemplateNames()
     {
-        $templates = Config::inst()->get(get_class($this), 'templates');
+        $templates = $this->getSliceTemplatesConfigForDropdown();
 
         // Ensure templates is always an array to prevent foreach errors
         if (!is_array($templates)) {
@@ -258,6 +258,43 @@ class Slice extends DataObject
     }
 
     /**
+     * Canonical `templates` map for the CMS (dropdown, lookups). Uses the slice base class’s
+     * uninherited config so leaf subclasses do not merge in extra template keys from inherited YAML.
+     * New unsaved records use {@see self::class}; we then load templates from the first direct subclass
+     * of Slice that declares them.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    protected function getSliceTemplatesConfigForDropdown(): array
+    {
+        $baseClass = $this->getBaseSliceClass();
+
+        $uninherited = Config::inst()->get($baseClass, 'templates', Config::UNINHERITED);
+        if (is_array($uninherited) && $uninherited !== []) {
+            return $uninherited;
+        }
+
+        $merged = Config::inst()->get($baseClass, 'templates');
+        if (is_array($merged) && $merged !== []) {
+            return $merged;
+        }
+
+        if ($baseClass === self::class) {
+            foreach (ClassInfo::subclassesFor(self::class, false) as $subClass) {
+                if (get_parent_class($subClass) !== self::class) {
+                    continue;
+                }
+                $direct = Config::inst()->get($subClass, 'templates', Config::UNINHERITED);
+                if (is_array($direct) && $direct !== []) {
+                    return $direct;
+                }
+            }
+        }
+
+        return [];
+    }
+
+    /**
      * Get the template config name to be selected by default for new slices
      *
      * @return string
@@ -267,7 +304,7 @@ class Slice extends DataObject
         if ($this->config()->get('defaultTemplate')) {
             return $this->config()->get('defaultTemplate');
         } else {
-            $templates = $this->config()->get('templates');
+            $templates = $this->getSliceTemplatesConfigForDropdown();
 
             // Ensure templates is always an array to prevent errors
             if (!is_array($templates)) {
@@ -514,7 +551,7 @@ EOD
      */
     protected function getTemplateConfig($name)
     {
-        $config = $this->config()->get('templates');
+        $config = $this->getSliceTemplatesConfigForDropdown();
 
         // Ensure config is always an array to prevent errors
         if (!is_array($config)) {
@@ -548,4 +585,3 @@ EOD
         return $config;
     }
 }
-

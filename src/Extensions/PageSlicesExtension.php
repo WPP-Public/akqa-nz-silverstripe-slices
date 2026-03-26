@@ -3,6 +3,7 @@
 namespace Heyday\SilverStripeSlices\Extensions;
 
 use Heyday\SilverStripeSlices\DataObjects\Slice;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
@@ -18,6 +19,15 @@ use SilverStripe\Versioned\Versioned;
  */
 class PageSlicesExtension extends DataExtension
 {
+    /**
+     * Class used when creating a new row in the Slices GridField. Must extend {@link Slice} and
+     * carry the same schema/extensions as your real slice records.
+     * If left as {@link Slice}, new rows have no subclass/extension fields until after first save.
+     *
+     * @var class-string<Slice>
+     */
+    private static $grid_model_class = Slice::class;
+
     private static $has_many = [
         'Slices' => Slice::class,
     ];
@@ -61,6 +71,11 @@ class PageSlicesExtension extends DataExtension
                 $gridConfig = GridFieldConfig_RecordEditor::create()
             )
         );
+
+        $gridModel = Config::inst()->get(__CLASS__, 'grid_model_class');
+        if (is_string($gridModel) && class_exists($gridModel) && is_a($gridModel, Slice::class, true)) {
+            $grid->setModelClass($gridModel);
+        }
 
         $gridConfig->removeComponentsByType(GridFieldDeleteAction::class);
         // Stale filter state (from old column keys like ID-only summary) can filter the list to zero.
