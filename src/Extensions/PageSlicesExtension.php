@@ -17,42 +17,42 @@ use SilverStripe\ORM\DataExtension;
 class PageSlicesExtension extends DataExtension
 {
     private static $has_many = [
-        'Slices' => Slice::class
+        'Slices' => Slice::class,
     ];
 
     private static $owns = [
-        'Slices'
+        'Slices',
     ];
 
     private static $cascade_deletes = [
-        'Slices'
+        'Slices',
     ];
 
     private static $cascade_duplicates = [
-        'Slices'
+        'Slices',
     ];
 
-    public function updateCMSFields(FieldList $fields)
+    public function updateCMSFields(FieldList $fields): void
     {
         $this->addSlicesCmsTab($fields);
     }
 
-    /**
-     * Add slice management to CMS fields
-     *
-     * @param FieldList $fields
-     */
-    public function addSlicesCmsTab(FieldList $fields, $tabName = 'Root.Slices', $dataList = null)
+    public function addSlicesCmsTab(FieldList $fields, string $tabName = 'Root.Slices', $dataList = null): void
     {
         if (!$dataList) {
             $dataList = $this->owner->Slices();
         }
 
-        $dataList = $dataList->setDataQueryParam(['Versioned.stage' => 'Stage']);
+        // Match the CMS reading mode (draft vs live). Forcing "Stage" alone can yield zero rows if
+        // the session/archive mode does not line up with that assumption.
+        $stage = Versioned::get_stage();
+        if ($stage) {
+            $dataList = $dataList->setDataQueryParam(['Versioned.stage' => $stage]);
+        }
 
         $fields->addFieldToTab(
             $tabName,
-            $grid = new GridField(
+            $grid = GridField::create(
                 'Slices',
                 'Slices',
                 $dataList,
@@ -61,9 +61,10 @@ class PageSlicesExtension extends DataExtension
         );
 
         $gridConfig->removeComponentsByType(GridFieldDeleteAction::class);
+        // Stale filter state (from old column keys like ID-only summary) can filter the list to zero.
+        $gridConfig->removeComponentsByType(GridFieldFilterHeader::class);
 
-        // Change columns displayed
-        /** @var GridFieldDataColumns $dataColumns */
+        /** @var GridFieldDataColumns|null $dataColumns */
         $dataColumns = $gridConfig->getComponentByType(GridFieldDataColumns::class);
 
         if ($dataColumns) {
@@ -71,12 +72,29 @@ class PageSlicesExtension extends DataExtension
                 $dataColumns->getDisplayFields($grid)
             ));
         }
+
+        // Allow sort by ID / Sort even when those columns are not shown (avoids LogicException on
+        // stale gridState URLs, e.g. SortColumn=ID from before display columns changed).
+        $sortHeader = $gridConfig->getComponentByType(GridFieldSortableHeader::class);
+        if ($sortHeader instanceof GridFieldSortableHeader) {
+            $sortHeader->setFieldSorting(array_values(array_unique(array_merge(
+                array_values((array) $sortHeader->getFieldSorting()),
+                ['ID', 'Sort']
+            ))));
+        }
     }
 
-    protected function modifyDisplayFields(array $fields)
+    /**
+     * Keep Title; add a readable template column. (Vendor version incorrectly removed Title.)
+     *
+     * @param array<string, string|array> $fields
+     * @return array<string, string|array>
+     */
+    protected function modifyDisplayFields(array $fields): array
     {
-        unset($fields['Title']);
-
-        return $fields;
+        return [
+            'Title' => 'Title',
+            'Template' => 'Slice type',
+        ];
     }
 }
