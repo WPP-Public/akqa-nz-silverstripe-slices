@@ -437,9 +437,12 @@ class Slice extends DataObject
         );
 
         if (!$template) {
-            throw new \Exception(
-                'Can\'t find a template from list: "' . implode('", "', $tryTemplates) . '"'
-            );
+            throw new \Exception(sprintf(
+                'Can\'t find a template from list: "%s" on slice #%d %s',
+                implode('", "', $tryTemplates),
+                $this->ID,
+                get_class($this)
+            ));
         }
 
         return [$template];

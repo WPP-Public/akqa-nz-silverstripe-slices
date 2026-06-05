@@ -13,6 +13,7 @@ use SilverStripe\Forms\GridField\GridFieldFilterHeader;
 use SilverStripe\Forms\GridField\GridFieldSortableHeader;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\Versioned\Versioned;
+use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
 /**
  * Extension to add slice management to Page
@@ -28,19 +29,19 @@ class PageSlicesExtension extends DataExtension
      */
     private static $grid_model_class = Slice::class;
 
-    private static $has_many = [
+    private static array $has_many = [
         'Slices' => Slice::class,
     ];
 
-    private static $owns = [
+    private static array $owns = [
         'Slices',
     ];
 
-    private static $cascade_deletes = [
+    private static array $cascade_deletes = [
         'Slices',
     ];
 
-    private static $cascade_duplicates = [
+    private static array $cascade_duplicates = [
         'Slices',
     ];
 
@@ -66,7 +67,7 @@ class PageSlicesExtension extends DataExtension
             $tabName,
             $grid = GridField::create(
                 'Slices',
-                'Slices',
+                '',
                 $dataList,
                 $gridConfig = GridFieldConfig_RecordEditor::create()
             )
@@ -89,6 +90,8 @@ class PageSlicesExtension extends DataExtension
                 $dataColumns->getDisplayFields($grid)
             ));
         }
+
+        $gridConfig->addComponent(GridFieldOrderableRows::create('Sort'));
 
         // Allow sort by ID / Sort even when those columns are not shown (avoids LogicException on
         // stale gridState URLs, e.g. SortColumn=ID from before display columns changed).
