@@ -10,6 +10,7 @@ use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
 use SilverStripe\Forms\GridField\GridFieldDataColumns;
 use SilverStripe\Forms\GridField\GridFieldDeleteAction;
 use SilverStripe\Forms\GridField\GridFieldFilterHeader;
+use SilverStripe\Forms\GridField\GridFieldPaginator;
 use SilverStripe\Forms\GridField\GridFieldSortableHeader;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\Versioned\Versioned;
@@ -29,6 +30,10 @@ class PageSlicesExtension extends DataExtension
      */
     private static $grid_model_class = Slice::class;
 
+    private static string $tab_name = 'Root.Slices';
+
+    private static string|null $before_field = 'Metadata';
+
     private static array $has_many = [
         'Slices' => Slice::class,
     ];
@@ -47,11 +52,22 @@ class PageSlicesExtension extends DataExtension
 
     public function updateCMSFields(FieldList $fields): void
     {
-        $this->addSlicesCmsTab($fields);
+        $tabName = (string) $this->getOwner()->config()->get('tab_name');
+
+        $this->addSlicesCmsTab($fields, $tabName);
     }
 
-    public function addSlicesCmsTab(FieldList $fields, string $tabName = 'Root.Slices', $dataList = null): void
+
+    public function addSlicesCmsTab(FieldList $fields, string|null $tabName = 'Root.Slices', $dataList = null): void
     {
+        $fields->removeByName('Slices');
+
+        if (!$tabName) {
+            $tabName = 'Root.Slices';
+        }
+
+        $beforeField = (string) $this->getOwner()->config()->get('before_field');
+
         if (!$dataList) {
             $dataList = $this->owner->Slices();
         }
@@ -59,6 +75,7 @@ class PageSlicesExtension extends DataExtension
         // Match the CMS reading mode (draft vs live). Forcing "Stage" alone can yield zero rows if
         // the session/archive mode does not line up with that assumption.
         $stage = Versioned::get_stage();
+
         if ($stage) {
             $dataList = $dataList->setDataQueryParam(['Versioned.stage' => $stage]);
         }
@@ -70,7 +87,8 @@ class PageSlicesExtension extends DataExtension
                 '',
                 $dataList,
                 $gridConfig = GridFieldConfig_RecordEditor::create()
-            )
+            ),
+            $beforeField
         );
 
         $gridModel = Config::inst()->get(__CLASS__, 'grid_model_class');
@@ -79,6 +97,10 @@ class PageSlicesExtension extends DataExtension
         }
 
         $gridConfig->removeComponentsByType(GridFieldDeleteAction::class);
+
+        // set page limit to 100
+        $gridConfig->getComponentByType(GridFieldPaginator::class)->setItemsPerPage(100);
+
         // Stale filter state (from old column keys like ID-only summary) can filter the list to zero.
         $gridConfig->removeComponentsByType(GridFieldFilterHeader::class);
 
