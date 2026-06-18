@@ -8,10 +8,24 @@ use SilverStripe\Core\Config\Config;
 
 class SliceTest extends TestCase
 {
+    private mixed $originalDefaultTemplate;
+    private mixed $originalTemplates;
+
     protected function setUp(): void
     {
+        $this->originalDefaultTemplate = Config::inst()->get(TestSlice::class, 'defaultTemplate');
+        $this->originalTemplates = Config::inst()->get(TestSlice::class, 'templates');
+
         Config::modify()->set(TestSlice::class, 'defaultTemplate', null);
         Config::modify()->set(TestSlice::class, 'templates', []);
+    }
+
+    protected function tearDown(): void
+    {
+        Config::modify()->set(TestSlice::class, 'defaultTemplate', $this->originalDefaultTemplate);
+        Config::modify()->set(TestSlice::class, 'templates', $this->originalTemplates);
+
+        parent::tearDown();
     }
 
     public function testTemplateNamesUseConfiguredNamesAndHumanisedFallbacks(): void
