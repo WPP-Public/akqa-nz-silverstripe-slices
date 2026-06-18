@@ -3,17 +3,24 @@
 namespace Heyday\SilverStripeSlices\Tests\DataObjects;
 
 use Heyday\SilverStripeSlices\DataObjects\Slice;
+use PHPUnit\Framework\TestCase;
 use SilverStripe\Core\Config\Config;
-use SilverStripe\Dev\SapphireTest;
 
-class SliceTest extends SapphireTest
+class SliceTest extends TestCase
 {
     protected function setUp(): void
     {
-        parent::setUp();
+        Config::nest();
 
         Config::modify()->set(TestSlice::class, 'defaultTemplate', null);
         Config::modify()->set(TestSlice::class, 'templates', []);
+    }
+
+    protected function tearDown(): void
+    {
+        Config::unnest();
+
+        parent::tearDown();
     }
 
     public function testTemplateNamesUseConfiguredNamesAndHumanisedFallbacks(): void
