@@ -136,12 +136,12 @@ You need to add the following Extension:
 namespace MyProject\Extensions;
 
 use MyProject\Pages\GenericPage;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 
 /**
  * Extension to change the parent of a slice
  */
-class SliceExtension extends DataExtension
+class SliceExtension extends Extension
 {
     private static $has_one = array(
         'Parent' => GenericPage::class
@@ -238,4 +238,4 @@ Slice:
 
 ## Compatibility
 
-This module requires at least SilverStripe 4 and PHP 5.6.
+This module requires SilverStripe 6 and PHP 8.3 or newer.

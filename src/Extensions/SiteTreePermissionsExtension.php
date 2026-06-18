@@ -2,7 +2,7 @@
 
 namespace Heyday\SilverStripeSlices\Extensions;
 
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
@@ -12,7 +12,7 @@ use SilverStripe\Security\Security;
  *
  * By default DataObjects are only writable by admin users, which isn't all that useful.
  */
-class SiteTreePermissionsExtension extends DataExtension
+class SiteTreePermissionsExtension extends Extension
 {
     /**
      * @param null $member

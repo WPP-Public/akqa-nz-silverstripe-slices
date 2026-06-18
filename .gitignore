@@ -1,4 +1,6 @@
 /vendor
 /resources
+/public
+/.phpunit.cache
 composer.lock
 .DS_Store

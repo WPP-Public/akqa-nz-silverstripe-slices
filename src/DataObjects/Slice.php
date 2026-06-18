@@ -13,11 +13,9 @@ use SilverStripe\Forms\FormField;
 use SilverStripe\Forms\ListboxField;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\Requirements;
 use SilverStripe\View\SSViewer;
-use SilverStripe\View\ThemeResourceLoader;
 
 /**
  * Class Slice
@@ -25,32 +23,23 @@ use SilverStripe\View\ThemeResourceLoader;
  */
 class Slice extends DataObject
 {
-    /**
-     * @var array
-     */
-    private static $db = [
+    private static array $db = [
         'Template' => 'Varchar(255)',
         'VisualOptions' => 'Varchar(255)',
         'Sort' => 'Int',
     ];
 
-    private static $has_one = [
+    private static array $has_one = [
         'Parent' => SiteTree::class
     ];
 
     private static $default_sort = 'Sort ASC';
 
-    /**
-     * @var array
-     */
-    private static $extensions = [
+    private static array $extensions = [
         Versioned::class
     ];
 
-    /**
-     * @var string
-     */
-    private static $table_name = 'Slice';
+    private static string $table_name = 'Slice';
 
     /**
      * @return FieldList
@@ -371,13 +360,13 @@ class Slice extends DataObject
     /**
      * Render the slice
      *
-     * @return DBHTMLText
+     * @return string
      */
-    public function forTemplate()
+    public function forTemplate(): string
     {
-        return $this->renderWith(
+        return (string) $this->renderWith(
             $this->getSSViewer(),
-            null
+            []
         );
     }
 
@@ -426,26 +415,7 @@ class Slice extends DataObject
      */
     protected function getTemplateList()
     {
-        $themes = SSViewer::get_themes();
-        if (($key = array_search('$default', $themes)) !== false) {
-            unset($themes[$key]);
-        }
-        $tryTemplates = $this->getTemplateSearchNames();
-        $template = ThemeResourceLoader::inst()->findTemplate(
-            $tryTemplates,
-            $themes
-        );
-
-        if (!$template) {
-            throw new \Exception(sprintf(
-                'Can\'t find a template from list: "%s" on slice #%d %s',
-                implode('", "', $tryTemplates),
-                $this->ID,
-                get_class($this)
-            ));
-        }
-
-        return [$template];
+        return $this->getTemplateSearchNames();
     }
 
     /**

@@ -4,6 +4,7 @@ namespace Heyday\SilverStripeSlices\Extensions;
 
 use Heyday\SilverStripeSlices\DataObjects\Slice;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Extension;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
@@ -12,14 +13,13 @@ use SilverStripe\Forms\GridField\GridFieldDeleteAction;
 use SilverStripe\Forms\GridField\GridFieldFilterHeader;
 use SilverStripe\Forms\GridField\GridFieldPaginator;
 use SilverStripe\Forms\GridField\GridFieldSortableHeader;
-use SilverStripe\ORM\DataExtension;
 use SilverStripe\Versioned\Versioned;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
 /**
  * Extension to add slice management to Page
  */
-class PageSlicesExtension extends DataExtension
+class PageSlicesExtension extends Extension
 {
     /**
      * Class used when creating a new row in the Slices GridField. Must extend {@link Slice} and
